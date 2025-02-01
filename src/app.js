@@ -17,6 +17,11 @@ mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTop
 
 // Rutas
 app.use('/api/satellites', satelliteRoutes);
+// Agrego esta ruta adicional para ver algo en el navegador cuando entro en "/" pero no estoy aún en /satellites
+app.get('/', (req, res) => {
+  res.send('Bienvenido al Fleet Service API');
+});
+
 
 // Iniciar el servidor
 const port = process.env.PORT || 3000;
