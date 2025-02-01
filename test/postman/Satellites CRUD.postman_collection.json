@@ -1,0 +1,88 @@
+{
+	"info": {
+		"_postman_id": "26e9a0a0-2369-4bbe-af7e-767375e19e5a",
+		"name": "Satellites CRUD",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "37910124"
+	},
+	"item": [
+		{
+			"name": "Create satellite",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"Test1\",\r\n  \"type\": \"Space Telescope\",\r\n  \"launchDate\": \"1990-04-24\",\r\n  \"status\": \"active\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/satellites",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"satellites"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get satellites",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/satellites",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"satellites"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000/api",
+			"type": "string"
+		},
+		{
+			"key": "base_url",
+			"value": "",
+			"type": "default"
+		}
+	]
+}
