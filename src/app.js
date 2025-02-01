@@ -29,6 +29,8 @@ app.get('/', (req, res) => {
 /* 
     SWAGGER
 */
+const path = require('path');
+
 // Definir opciones para Swagger
 const swaggerOptions = {
   swaggerDefinition: {
@@ -44,7 +46,10 @@ const swaggerOptions = {
       },
     ],
   },
-  apis: ['./satellites/routes/satelliteRoutes.js', './satellites/controllers/satelliteController.js'],  
+  apis: [
+    path.resolve(__dirname, './routes/satelliteRoutes.js'),
+    path.resolve(__dirname, './controllers/satelliteController.js')
+  ],
 };
 
 
