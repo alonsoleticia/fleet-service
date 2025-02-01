@@ -2,15 +2,12 @@ const express = require('express');
 const router = express.Router();
 const satelliteController = require('../controllers/satelliteController');
 
-// Rutas para manejar satélites
-router.post('/', satelliteController.createSatellite);
+// Routes to handle satellites
+router.post('/', satelliteController.createSatellite);  // Create a new satellite
 
-router.get('/', satelliteController.getAllSatellites);
-router.get('/:id', satelliteController.getSatelliteById);
-router.put('/:id', satelliteController.updateSatellite);
-router.delete('/:id', satelliteController.deleteSatellite);
+router.get('/', satelliteController.getAllSatellites);  // Get all satellites
+router.get('/:id', satelliteController.getSatelliteById);  // Get a satellite by ID
+router.put('/:id', satelliteController.updateSatellite);  // Update a satellite by ID
+router.delete('/:id', satelliteController.deleteSatellite);  // Delete a satellite by ID
 
-module.exports = router;
-
-
-
+module.exports = router;  // Export the router to be used in other parts of the application

@@ -1,15 +1,14 @@
 const Satellite = require('../models/satelliteModel');
 
-
-// Crear un nuevo satélite
+// Create a new satellite
 exports.createSatellite = async (req, res) => {
   try {
     const { name, type, launchDate, status } = req.body;
     const satellite = new Satellite({ name, type, launchDate, status });
     await satellite.save();
-    res.status(201).json(satellite);
+    res.status(201).json(satellite);  // Respond with the created satellite
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message });  // Respond with error if something goes wrong
   }
 };
 
@@ -17,11 +16,11 @@ exports.createSatellite = async (req, res) => {
  * @swagger
  * /api/satellites:
  *   get:
- *     summary: Obtener todos los satélites
- *     description: Devuelve una lista de todos los satélites en el sistema.
+ *     summary: Get all satellites
+ *     description: Returns a list of all satellites in the system.
  *     responses:
  *       200:
- *         description: Lista de satélites
+ *         description: List of satellites
  *         content:
  *           application/json:
  *             schema:
@@ -31,76 +30,67 @@ exports.createSatellite = async (req, res) => {
  *                 properties:
  *                   name:
  *                     type: string
- *                     description: Nombre del satélite
+ *                     description: Name of the satellite
  *                   type:
  *                     type: string
- *                     description: Tipo del satélite
+ *                     description: Type of the satellite
  *                   launchDate:
  *                     type: string
  *                     format: date
- *                     description: Fecha de lanzamiento
+ *                     description: Launch date
  *                   status:
  *                     type: string
  *                     enum: [active, inactive]
- *                     description: Estado del satélite
+ *                     description: Status of the satellite
  *       500:
- *         description: Error del servidor
+ *         description: Server error
  */
 exports.getAllSatellites = async (req, res) => {
   try {
-    const satellites = await Satellite.find();
-    res.status(200).json(satellites);
+    const satellites = await Satellite.find();  // Find all satellites in the database
+    res.status(200).json(satellites);  // Respond with the list of satellites
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message });  // Respond with error if something goes wrong
   }
 };
 
-exports.getAllSatellites = async (req, res) => {
-  try {
-    const satellites = await Satellite.find();
-    res.status(200).json(satellites);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-// Obtener un satélite por ID
+// Get a satellite by ID
 exports.getSatelliteById = async (req, res) => {
   try {
-    const satellite = await Satellite.findById(req.params.id);
+    const satellite = await Satellite.findById(req.params.id);  // Find a satellite by its ID
     if (!satellite) {
-      return res.status(404).json({ message: 'Satélite no encontrado' });
+      return res.status(404).json({ message: 'Satellite not found' });  // Respond with 404 if satellite is not found
     }
-    res.status(200).json(satellite);
+    res.status(200).json(satellite);  // Respond with the found satellite
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message });  // Respond with error if something goes wrong
   }
 };
 
-// Actualizar un satélite por ID
+// Update a satellite by ID
 exports.updateSatellite = async (req, res) => {
   try {
-    const satellite = await Satellite.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const satellite = await Satellite.findByIdAndUpdate(req.params.id, req.body, { new: true });  // Update satellite by ID
     if (!satellite) {
-      return res.status(404).json({ message: 'Satélite no encontrado' });
+      return res.status(404).json({ message: 'Satellite not found' });  // Respond with 404 if satellite is not found
     }
-    res.status(200).json(satellite);
+    res.status(200).json(satellite);  // Respond with the updated satellite
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message });  // Respond with error if something goes wrong
   }
 };
 
-// Eliminar un satélite por ID
-// Nota: este endpoint elimina completamente de BD el elemento, no lo marca a borrado. Para eso hay que utilizar el findByIdAndUpdate y que la actualización marque a deleted.
+// Delete a satellite by ID
+// Note: This endpoint completely deletes the satellite from the database, not just marking it as deleted. 
+// To mark it as deleted, use findByIdAndUpdate and set a 'deleted' flag.
 exports.deleteSatellite = async (req, res) => {
   try {
-    const satellite = await Satellite.findByIdAndDelete(req.params.id);
+    const satellite = await Satellite.findByIdAndDelete(req.params.id);  // Delete satellite by ID
     if (!satellite) {
-      return res.status(404).json({ message: 'Satélite no encontrado' });
+      return res.status(404).json({ message: 'Satellite not found' });  // Respond with 404 if satellite is not found
     }
-    res.status(200).json({ message: 'Satélite eliminado' });
+    res.status(200).json({ message: 'Satellite deleted' });  // Respond with success message
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message });  // Respond with error if something goes wrong
   }
 };
-

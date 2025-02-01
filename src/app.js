@@ -6,24 +6,24 @@ const swaggerUi = require('swagger-ui-express');
 
 const satelliteRoutes = require('./routes/satelliteRoutes');
 
-dotenv.config(); // Cargar las variables de entorno
+dotenv.config(); // Load environment variables
 
 const app = express();
 
-// Middleware para parsear JSON
+// Middleware to parse JSON
 app.use(express.json());
 
-// Conexión a MongoDB
+// MongoDB connection
 mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('Conectado a MongoDB'))
-  .catch(err => console.error('Error al conectar a MongoDB:', err));
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => console.error('Error connecting to MongoDB:', err));
 
-// Rutas
+// Routes
 app.use('/api/satellites', satelliteRoutes);
 
-// Agrego esta ruta adicional para ver algo en el navegador cuando entro en "/" pero no estoy aún en /satellites
+// Adding this route to display something in the browser when accessing "/" before reaching /satellites
 app.get('/', (req, res) => {
-  res.send('Bienvenido al Fleet Service API');
+  res.send('Welcome to the Fleet Service API');
 });
 
 /* 
@@ -31,41 +31,38 @@ app.get('/', (req, res) => {
 */
 const path = require('path');
 
-// Definir opciones para Swagger
+// Define options for Swagger
 const swaggerOptions = {
   swaggerDefinition: {
-    openapi: '3.0.0',  // Usa OpenAPI 3.0
+    openapi: '3.0.0',  // Use OpenAPI 3.0
     info: {
       title: 'Fleet Service API',
       version: '1.0.0',
-      description: 'API para gestionar satélites y otras entidades en el servicio Fleet',
+      description: 'API to manage satellites and other entities in the Fleet service',
     },
     servers: [
       {
-        url: 'http://localhost:3000/api',  // URL del servidor
+        url: 'http://localhost:3000/api',  // Server URL
       },
     ],
   },
   apis: [
-    path.resolve(__dirname, './routes/satelliteRoutes.js'),
-    path.resolve(__dirname, './controllers/satelliteController.js')
+    path.resolve(__dirname, './routes/satelliteRoutes.js'),  // Absolute path to routes file
+    path.resolve(__dirname, './controllers/satelliteController.js')  // Absolute path to controller file
   ],
 };
 
-
-// Generar la documentación Swagger
+// Generate Swagger documentation
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
 
-// Usar Swagger UI para visualizar la documentación
-console.log('Documentación Swagger disponible en /api-docs');
+// Use Swagger UI to view the documentation
+console.log('Swagger documentation available at /api-docs');
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-
-
 
 /* 
     INITIALIZE SERVER
 */
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
-  console.log(`Servidor corriendo en el puerto ${port}`);
+  console.log(`Server running on port ${port}`);
 });
