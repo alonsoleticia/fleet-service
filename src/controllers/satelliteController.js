@@ -1,5 +1,6 @@
 const Satellite = require('../models/satelliteModel');
 
+
 // Crear un nuevo satélite
 exports.createSatellite = async (req, res) => {
   try {
@@ -12,7 +13,39 @@ exports.createSatellite = async (req, res) => {
   }
 };
 
-// Obtener todos los satélites
+/**
+ * @swagger
+ * /api/satellites:
+ *   get:
+ *     summary: Obtener todos los satélites
+ *     description: Devuelve una lista de todos los satélites en el sistema.
+ *     responses:
+ *       200:
+ *         description: Lista de satélites
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   name:
+ *                     type: string
+ *                     description: Nombre del satélite
+ *                   type:
+ *                     type: string
+ *                     description: Tipo del satélite (por ejemplo, "espacial", "comunicaciones", etc.)
+ *                   launchDate:
+ *                     type: string
+ *                     format: date
+ *                     description: Fecha de lanzamiento del satélite (en formato ISO 8601)
+ *                   status:
+ *                     type: string
+ *                     enum: [active, inactive]
+ *                     description: Estado del satélite (puede ser 'active' o 'inactive')
+ *       500:
+ *         description: Error del servidor
+ */
 exports.getAllSatellites = async (req, res) => {
   try {
     const satellites = await Satellite.find();
@@ -61,3 +94,4 @@ exports.deleteSatellite = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
