@@ -49,6 +49,7 @@ exports.updateSatellite = async (req, res) => {
 };
 
 // Eliminar un satélite por ID
+// Nota: este endpoint elimina completamente de BD el elemento, no lo marca a borrado. Para eso hay que utilizar el findByIdAndUpdate y que la actualización marque a deleted.
 exports.deleteSatellite = async (req, res) => {
   try {
     const satellite = await Satellite.findByIdAndDelete(req.params.id);
