@@ -204,37 +204,44 @@ exports.getAllSatellites = async (req, res) => {
  *         description: Internal server error 
  */ 
 exports.getSatelliteById = async (req, res) => {
+  // Uses aux function with corresponding filtering option to retrieve the info from DB:
+  return getSatellite(req, res, { _id: req.params.id });
+};
+
+exports.getSatelliteByName = async (req, res) => {
+  // Uses aux function with corresponding filtering option to retrieve the info from DB:
+  return getSatellite(req, res, { name: req.params.name });  
+}
+
+
+// Auxiliary function:
+// - abstracts the DB query using the corresponding filter
+// - manages a query param to select the detailed answer
+const getSatellite = async (req, res, filter) => {
   try {
-    
-    /* 
-    A query param has been included to reuse a flexible GET endpoint including or not all the information of the entity:
+     
+    /* A query param has been included to reuse a flexible GET endpoint including or not all the information of the entity:
       - if details === "true" => all fields are considered
-      - otherwise => a subset of fields is considered 
-    */
+      - otherwise => only a subset of fields is considered */
     const { details } = req.query;
-    const showFullDetails = details === "true";      
+    const showFullDetails = details === "true";
     let consideredFields = showFullDetails ? '' : '_id name';
 
-    const satellite = await Satellite.findById(req.params.id).select(consideredFields);  
+    const satellite = await Satellite.findOne(filter).select(consideredFields);
 
     if (!satellite) {
-      return res.status(404).json({ message: 'Satellite not found' }); 
+      return res.status(404).json({ message: 'Satellite not found' });
     }
-    res.status(200).json(satellite); 
 
+    res.status(200).json(satellite);
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ error: `An error has occurred while retrieving satellite from database. Details: ${error}` });
+    res.status(500).json({ error: `An error occurred. Details: ${error}` });
   }
 };
 
 
-
-
-
-
-
-
+// Reduce the update scope to minimum
 
 exports.updateSatellite = async (req, res) => {
   try {
@@ -249,12 +256,8 @@ exports.updateSatellite = async (req, res) => {
 };
 
 
-
-
-
-
-
-
+// Remember setting this as 'marked as deleted'
+// Check out condition of name/slug unique with deleted entities
 
 exports.deleteSatellite = async (req, res) => {
   try {
