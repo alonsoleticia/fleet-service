@@ -1,7 +1,9 @@
 const mongoose = require('mongoose');
 const SATELLITE_STATUSES = ['active', 'inactive']
 
-// Define the schema for a satellite
+/*
+Schema for the Satellite entity:
+*/
 const satelliteSchema = new mongoose.Schema({
   name: { type: String, required: true, unique: true },  // Satellite name (required field)
   slug: {type: String, required: true, unique: true }, // Long name of the satellite
@@ -20,10 +22,38 @@ const satelliteSchema = new mongoose.Schema({
 }
 );
 
-// Create the model
-const Satellite = mongoose.model('Satellite', satelliteSchema);
+/*
+Summarised schema for GET basic responses:
+*/
+const SatelliteSummarySchema = new mongoose.Schema({
+  _id: mongoose.Schema.Types.ObjectId,
+  name: String,
+});
 
-module.exports = Satellite;  // Export the model to be used in other parts of the application
+/*
+Detailed schema for GET full responses:
+*/
+const SatelliteDetailedSchema = new mongoose.Schema({
+  _id: mongoose.Schema.Types.ObjectId,
+  name: String,
+  slug: String,
+  status: String,
+  company: String,
+  createdBy: String, 
+  updatedBy: String,
+  orbit: Object
+},{
+  timestamps: true
+});
+
+// Export the models to be used in other parts of the application
+module.exports = {
+  Satellite: mongoose.model("Satellite", satelliteSchema),
+  SatelliteSummarySchema,
+  SatelliteDetailedSchema,
+}
+
+
 
 /*
   Disclaimer: there may be missing fields for the moment such as 'origin' (TBC if needed), 'beams' (also TBC). It may also be interesting to type the satellites (i.e. TRADITIONAL, FLEXIBLE).
