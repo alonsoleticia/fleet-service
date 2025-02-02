@@ -1,12 +1,11 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const swaggerJsdoc = require('swagger-jsdoc');
-const swaggerUi = require('swagger-ui-express');
-
 const satelliteRoutes = require('./routes/satelliteRoutes');
+const { swaggerUi, swaggerSpec } = require("./config/swaggerConfig");
 
-dotenv.config(); // Load environment variables
+// Load environment variables
+dotenv.config(); 
 
 const app = express();
 
@@ -26,49 +25,11 @@ app.get('/', (req, res) => {
   res.send('Welcome to the Fleet Service API');
 });
 
-/* 
-    SWAGGER
-*/
-const path = require('path');
-const SatelliteModels = require("./models/satelliteModel"); 
-const { SatelliteFullSchema, SatelliteSummarisedSchema } = SatelliteModels;
-
-
-// Define options for Swagger
-const swaggerOptions = {
-  swaggerDefinition: {
-    openapi: '3.0.0',  // Use OpenAPI 3.0
-    info: {
-      title: 'Fleet Service API',
-      version: '1.0.0',
-      description: 'API to manage satellites and other entities in the Fleet service',
-    },
-    servers: [
-      {
-        url: 'http://localhost:3000/api',  // Server URL
-      },
-    ],
-
-  },
-  apis: [
-    
-    path.resolve(__dirname, './models/*.js'),  
-    path.resolve(__dirname, './routes/satelliteRoutes.js'),  
-    path.resolve(__dirname, './controllers/satelliteController.js')  
-  ],
-  
-};
-
-// Generate Swagger documentation
-const swaggerDocs = swaggerJsdoc(swaggerOptions);
-
-// Use Swagger UI to view the documentation
+// Route for Swagger:
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 console.log('Swagger documentation available at /api-docs');
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-/* 
-    INITIALIZE SERVER
-*/
+// Server initialization:
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
