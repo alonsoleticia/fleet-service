@@ -1,7 +1,6 @@
 const { Satellite, SatelliteSummarised } = require('../models/satellite');
 const ALL_FIELDS = ''
 const SUMMARISED_FIELDS = Object.keys(SatelliteSummarised.schema.paths).join(' ');
-const MINIMUM_FIELDS = '_id name'
 
 // Create a new satellite
 /**
@@ -288,7 +287,7 @@ const getSatellite = async (req, res, filter) => {
 const getSelectedFieldsInResponse = (req) => {
   const { details } = req.query;
   const showFullDetails = details === "true";
-  return showFullDetails ? ALL_FIELDS : MINIMUM_FIELDS;
+  return showFullDetails ? ALL_FIELDS : SUMMARISED_FIELDS;
 }
 
 
