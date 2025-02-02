@@ -36,7 +36,7 @@ const SATELLITE_STATUSES = ['active', 'inactive'];
  *           description: Orbit height in Km.
  *           default: 35786.063
  * 
- *     SatelliteFull:
+ *     Satellite:
  *       type: object
  *       required:
  *         - name
@@ -91,7 +91,7 @@ const OrbitSchema = new mongoose.Schema({
 });
 
 // Main satellite schema
-const SatelliteFullSchema = new mongoose.Schema({
+const SatelliteSchema = new mongoose.Schema({
   name: NameSchema,
   slug: SlugSchema,
   status: { type: String, enum: SATELLITE_STATUSES, default: SATELLITE_STATUSES[0] },
@@ -113,7 +113,9 @@ const SatelliteSummarisedSchema = new mongoose.Schema({
 
 // Export models and schemas
 module.exports = {
-  Satellite: mongoose.model("Satellite", SatelliteFullSchema),
-  SatelliteFullSchema,
+  Satellite: mongoose.models.Satellite || mongoose.model("Satellite", SatelliteSchema),
+  SatelliteSummarised: mongoose.models.SatelliteSummarised || mongoose.model("SatelliteSummarised", SatelliteSummarisedSchema),
+  SatelliteSchema,
   SatelliteSummarisedSchema
 };
+

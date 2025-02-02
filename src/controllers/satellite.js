@@ -1,4 +1,7 @@
-const { Satellite } = require('../models/satellite');
+const { Satellite, SatelliteSummarised } = require('../models/satellite');
+const ALL_FIELDS = ''
+const SUMMARISED_FIELDS = Object.keys(SatelliteSummarised.schema.paths).join(' ');
+const MINIMUM_FIELDS = '_id name'
 
 // Create a new satellite
 /**
@@ -13,7 +16,7 @@ const { Satellite } = require('../models/satellite');
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SatelliteFull'
+ *               $ref: '#/components/schemas/Satellite'
  *       responses:
  *         201:
  *           description: Satellite created successfully
@@ -97,7 +100,7 @@ exports.createSatellite = async (req, res) => {
     const savedSatellite = await satellite.save();
 
     // Select the required information to return:
-    const satelliteReqData = await Satellite.findById(savedSatellite._id).select('_id name slug orbit');
+    const satelliteReqData = await Satellite.findById(savedSatellite._id).select(SUMMARISED_FIELDS);
 
     // Return the required information:
     return res.status(201).json(satelliteReqData);
@@ -107,7 +110,6 @@ exports.createSatellite = async (req, res) => {
     return res.status(500).json({ error: `An error has occurred while saving the satellite in database. Details: ${error}` });
   }
 };
-
 
 // Get all satellites (with/without details)
 /**
@@ -137,23 +139,15 @@ exports.createSatellite = async (req, res) => {
  *               type: array
  *               items:
  *                 oneOf:
- *                   - $ref: '#/components/schemas/SatelliteFull'
+ *                   - $ref: '#/components/schemas/Satellite'
  *                   - $ref: '#/components/schemas/SatelliteSummarised'               
  *       500:
  *         description: Internal server error 
  */ 
 exports.getAllSatellites = async (req, res) => {
   try {
-    /* 
-    A query param has been included to reuse a flexible GET endpoint including or not all the information of the entity:
-      - if details === "true" => all fields are considered
-      - otherwise => a subset of fields is considered 
-    */
-    const { details } = req.query;
-    const showFullDetails = details === "true";      
-    let consideredFields = showFullDetails ? '' : '_id name';
-
-    const satellites = await Satellite.find().select(consideredFields);  
+    const selectedFields = getSelectedFieldsInResponse(req);
+    const satellites = await Satellite.find().select(selectedFields);  
     res.status(200).json(satellites);  
 
   } catch (error) {
@@ -165,7 +159,7 @@ exports.getAllSatellites = async (req, res) => {
 // Get satellite by ID (with/without details)
 /**
  * @swagger
- * /api/satellites/{id}:
+ * /api/satellites/id/{id}:
  *   get:
  *     summary: Get satellite by ID
  *     tags: [Satellites]
@@ -196,7 +190,7 @@ exports.getAllSatellites = async (req, res) => {
  *               type: array
  *               items:
  *                 oneOf:
- *                   - $ref: '#/components/schemas/SatelliteFull'
+ *                   - $ref: '#/components/schemas/Satellite'
  *                   - $ref: '#/components/schemas/SatelliteSummarised'   
  *       404:
  *         description: Satellite not found            
@@ -208,26 +202,68 @@ exports.getSatelliteById = async (req, res) => {
   return getSatellite(req, res, { _id: req.params.id });
 };
 
+// Get satellite by name (with/without details)
+/**
+ * @swagger
+ * /api/satellites/name/{name}:
+ *   get:
+ *     summary: Get satellite by name
+ *     tags: [Satellites]
+ *     description: | 
+ *       Returns the information corresponding to the requested satellite.
+ *       - If **details=true**, all fields are returned.
+ *       - If **details is omitted or false**, only `_id` and `name` are returned.
+ *     parameters: 
+ *     - in: query
+ *       name: details
+ *       schema:
+ *         type: string
+ *         enum: ["true", "false"]
+ *       required: false
+ *       description: "Use 'true' to get full satellite details. Default is summary mode."
+ *     - in: path
+ *       name: name
+ *       required: true
+ *       schema:
+ *         type: string
+ *       description: "Satellite name to retrieve"
+ *     responses:
+ *       200:
+ *         description: Satellite information
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 oneOf:
+ *                   - $ref: '#/components/schemas/Satellite'
+ *                   - $ref: '#/components/schemas/SatelliteSummarised'   
+ *       404:
+ *         description: Satellite not found            
+ *       500:
+ *         description: Internal server error 
+ */ 
 exports.getSatelliteByName = async (req, res) => {
   // Uses aux function with corresponding filtering option to retrieve the info from DB:
   return getSatellite(req, res, { name: req.params.name });  
 }
 
-
-// Auxiliary function:
-// - abstracts the DB query using the corresponding filter
-// - manages a query param to select the detailed answer
+/**
+ * Retrieves a satellite from the database based on the provided filter.
+ *
+ * @async
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @param {Object} filter - Query filter to find the satellite in the database.
+ * @returns {Promise<void>} Does not return a value directly but sends an HTTP response with the satellite data or an error.
+ *
+ * @throws {Error} Returns a 500 status code if an unexpected error occurs during the query.
+ * @throws {Error} Returns a 404 status code if the satellite is not found.
+ */
 const getSatellite = async (req, res, filter) => {
   try {
-     
-    /* A query param has been included to reuse a flexible GET endpoint including or not all the information of the entity:
-      - if details === "true" => all fields are considered
-      - otherwise => only a subset of fields is considered */
-    const { details } = req.query;
-    const showFullDetails = details === "true";
-    let consideredFields = showFullDetails ? '' : '_id name';
-
-    const satellite = await Satellite.findOne(filter).select(consideredFields);
+    const selectedFields = getSelectedFieldsInResponse(req);
+    const satellite = await Satellite.findOne(filter).select(selectedFields);
 
     if (!satellite) {
       return res.status(404).json({ message: 'Satellite not found' });
@@ -239,6 +275,27 @@ const getSatellite = async (req, res, filter) => {
     res.status(500).json({ error: `An error occurred. Details: ${error}` });
   }
 };
+
+/**
+ * Determines which fields should be selected in the response based on the query parameter.
+ * 
+ * @param {Object} req - Express request object containing query parameters.
+ * @returns {string} A string representing the selected fields.
+ *
+ * @note This function manages the level of detail in database queries.
+ * @todo Consider moving this function to a utility module.
+ */
+const getSelectedFieldsInResponse = (req) => {
+  const { details } = req.query;
+  const showFullDetails = details === "true";
+  return showFullDetails ? ALL_FIELDS : MINIMUM_FIELDS;
+}
+
+
+
+
+
+
 
 
 // Reduce the update scope to minimum
