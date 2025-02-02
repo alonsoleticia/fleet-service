@@ -1,0 +1,835 @@
+{
+	"info": {
+		"_postman_id": "f7b1b3c5-e2e1-45b2-877a-470f844f9ed0",
+		"name": "Satellites - manual",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "37910124"
+	},
+	"item": [
+		{
+			"name": "Create satellite (201 - successful)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Satellite correctly generated\", function () {\r",
+							"    pm.response.to.have.status(201);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"HB13B\",\r\n  \"slug\": \"Eutelsat Hotbird 13B\",\r\n  \"orbit\": {\r\n    \"longitude\": -13\r\n  }\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/satellites",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"satellites"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create satellite (400 - missing req. name)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Bad request: missing required name field\", function () {\r",
+							"    pm.response.to.have.status(400);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"slug\": \"Eutelsat Hotbird 13B\",\r\n  \"orbit\": {\r\n    \"longitude\": -13\r\n  }\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/satellites",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"satellites"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create satellite (400 - missing req. slug)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Bad request: missing required slug field\", function () {\r",
+							"    pm.response.to.have.status(400);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"HB13E\",\r\n  \"orbit\": {\r\n    \"longitude\": -13\r\n  }\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/satellites",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"satellites"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create satellite (400 - missing req. orbit)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Bad request: missing required orbit field\", function () {\r",
+							"    pm.response.to.have.status(400);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"HB13E\",\r\n  \"slug\": \"Eutelsat Hotbird HB13E\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/satellites",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"satellites"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create satellite (400 - incorrect type name)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Incorrect type of field 'name'. It must be string value.\", function () {\r",
+							"    pm.response.to.have.status(400);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": 1234,\r\n  \"slug\": \"Random example 1\",\r\n  \"orbit\": {\r\n    \"longitude\": -13\r\n  }\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/satellites",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"satellites"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create satellite (400 - incorrect type slug)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Incorrect type of field 'slug'. It must be string value.\", function () {\r",
+							"    pm.response.to.have.status(400);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"Example\",\r\n  \"slug\": 1234,\r\n  \"orbit\": {\r\n    \"longitude\": -13\r\n  }\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/satellites",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"satellites"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create satellite (400 - incorrect type orbit)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Incorrect type of field 'orbit'. It must be object value.\", function () {\r",
+							"    pm.response.to.have.status(400);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"Example\",\r\n  \"slug\": \"Example long name\",\r\n  \"orbit\": 13\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/satellites",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"satellites"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create satellite (400 - incorrect orbit range)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Incorrect type of field 'orbit'. It must be object value.\", function () {\r",
+							"    pm.response.to.have.status(400);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"Example\",\r\n  \"slug\": \"Example long name\",\r\n  \"orbit\": {\r\n    \"longitude\": -200\r\n  }\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/satellites",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"satellites"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create satellite (409 - duplicated name)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Conflict in creation: provided satellite name already used\", function () {\r",
+							"    pm.response.to.have.status(409);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"HB13B\",\r\n  \"slug\": \"Eutelsat different slug\",\r\n  \"orbit\": {\r\n    \"longitude\": -13\r\n  }\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/satellites",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"satellites"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create satellite (409 - duplicated slug)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Conflict in creation: provided satellite slug already used\", function () {\r",
+							"    pm.response.to.have.status(409);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"HB13B-different\",\r\n  \"slug\": \"Eutelsat Hotbird 13B\",\r\n  \"orbit\": {\r\n    \"longitude\": -13\r\n  }\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/satellites",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"satellites"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get satellites (200 - detailed)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"List of satellites with details\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/satellites?details=true",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"satellites"
+					],
+					"query": [
+						{
+							"key": "details",
+							"value": "true"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get satellites (200 - summarised)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"List of satellites without details\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/satellites?details=false",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"satellites"
+					],
+					"query": [
+						{
+							"key": "details",
+							"value": "false"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get satellite by ID (200 - detailed)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Get detailed satellite info by ID\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/satellites/id/679f98a3e42f7034a8ba3b30?details=true",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"satellites",
+						"id",
+						"679f98a3e42f7034a8ba3b30"
+					],
+					"query": [
+						{
+							"key": "details",
+							"value": "true"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get satellite by ID (200 - summarised)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Get summarised satellite info by ID\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/satellites/id/679f98a3e42f7034a8ba3b30?details=false",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"satellites",
+						"id",
+						"679f98a3e42f7034a8ba3b30"
+					],
+					"query": [
+						{
+							"key": "details",
+							"value": "false"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get satellite by ID (404 - not found - detailed)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Satellite not found\", function () {\r",
+							"    pm.response.to.have.status(404);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/satellites/id/679f98a3e42f2034a8ba3b30?details=true",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"satellites",
+						"id",
+						"679f98a3e42f2034a8ba3b30"
+					],
+					"query": [
+						{
+							"key": "details",
+							"value": "true"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get satellite by ID (404 - not found - summarised)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Satellite not found\", function () {\r",
+							"    pm.response.to.have.status(404);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/satellites/id/679f98a3e42f2034a8ba3b30?details=false",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"satellites",
+						"id",
+						"679f98a3e42f2034a8ba3b30"
+					],
+					"query": [
+						{
+							"key": "details",
+							"value": "false"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get satellite by ID (500 - internal error - summarised)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Internal error since the ID is not a MongoID\", function () {\r",
+							"    pm.response.to.have.status(500);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/satellites/id/679f98a3842f703a8ba3b30?=",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"satellites",
+						"id",
+						"679f98a3842f703a8ba3b30"
+					],
+					"query": [
+						{
+							"key": "",
+							"value": ""
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get satellite by name (200 - detailed)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Get detailed satellite info by name\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/satellites/name/HB13B?details=true",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"satellites",
+						"name",
+						"HB13B"
+					],
+					"query": [
+						{
+							"key": "details",
+							"value": "true"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get satellite by name (200 - summarised)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Get detailed satellite info by name\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/satellites/name/HB13B?=",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"satellites",
+						"name",
+						"HB13B"
+					],
+					"query": [
+						{
+							"key": "",
+							"value": ""
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get satellite by name (404 - not found - detailed)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Satellite not found by name\", function () {\r",
+							"    pm.response.to.have.status(404);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/satellites/name/HB345?details=true",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"satellites",
+						"name",
+						"HB345"
+					],
+					"query": [
+						{
+							"key": "details",
+							"value": "true"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": ":id",
+			"value": "",
+			"type": "default"
+		}
+	]
+}
