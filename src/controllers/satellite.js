@@ -140,7 +140,7 @@ exports.createSatellite = async (req, res) => {
  *                   - $ref: '#/components/schemas/SatelliteFull'
  *                   - $ref: '#/components/schemas/SatelliteSummarised'               
  *       500:
- *         description: Server error 
+ *         description: Internal server error 
  */ 
 exports.getAllSatellites = async (req, res) => {
   try {
@@ -149,9 +149,9 @@ exports.getAllSatellites = async (req, res) => {
       - if details === "true" => all fields are considered
       - otherwise => a subset of fields is considered 
     */
-      const { details } = req.query;
-      const showFullDetails = details === "true";      
-      let consideredFields = showFullDetails ? '' : '_id name';
+    const { details } = req.query;
+    const showFullDetails = details === "true";      
+    let consideredFields = showFullDetails ? '' : '_id name';
 
     const satellites = await Satellite.find().select(consideredFields);  
     res.status(200).json(satellites);  
@@ -162,11 +162,10 @@ exports.getAllSatellites = async (req, res) => {
   }
 };
 
-
 // Get satellite by ID (with/without details)
 /**
  * @swagger
- * /api/satellites:
+ * /api/satellites/{id}:
  *   get:
  *     summary: Get satellite by ID
  *     tags: [Satellites]
@@ -182,6 +181,12 @@ exports.getAllSatellites = async (req, res) => {
  *         enum: ["true", "false"]
  *       required: false
  *       description: "Use 'true' to get full satellite details. Default is summary mode."
+ *     - in: path
+ *       name: id
+ *       required: true
+ *       schema:
+ *         type: string
+ *       description: "Satellite ID to retrieve"
  *     responses:
  *       200:
  *         description: Satellite information
