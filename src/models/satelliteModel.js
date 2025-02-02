@@ -1,10 +1,11 @@
 const mongoose = require('mongoose');
+const SATELLITE_STATUSES = ['active', 'inactive']
 
 // Define the schema for a satellite
 const satelliteSchema = new mongoose.Schema({
-  name: { type: String, required: true },  // Satellite name (required field)
-  slug: {type: String, required: true }, // Long name of the satellite
-  status: { type: String, enum: ['active', 'inactive'], default: 'active' }, // Status of the satellite, default is 'active'
+  name: { type: String, required: true, unique: true },  // Satellite name (required field)
+  slug: {type: String, required: true, unique: true }, // Long name of the satellite
+  status: { type: String, enum: SATELLITE_STATUSES, default: SATELLITE_STATUSES[0] }, // Status of the satellite, default is 'active'
   company: { type: String, default: null } , // FIXME: related to 'companies' model (or null)
   createdBy: { type: String }, // FIXME: related to 'users' model
   updatedBy: { type: String }, // FIXME: related to 'users' model
