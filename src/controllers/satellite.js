@@ -319,7 +319,7 @@ exports.updateSatellite = async (req, res) => {
 // Delete satellite by ID (soft delete)
 /**
  * @swagger
- * /api/satellites/{id}:
+ * /api/satellites/id/{id}:
  *   delete:
  *     summary: Soft delete a satellite
  *     tags: [Satellites]
