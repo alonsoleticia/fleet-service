@@ -48,14 +48,11 @@ const swaggerOptions = {
         url: 'http://localhost:3000/api',  // Server URL
       },
     ],
-    components: {
-      schemas: {
-        SatelliteFull: { type: "object", properties: SatelliteFullSchema.obj  },
-        SatelliteSummarised: { type: "object", properties: SatelliteSummarisedSchema.obj }
-      },
-    },
+
   },
   apis: [
+    
+    path.resolve(__dirname, './models/*.js'),  
     path.resolve(__dirname, './routes/satelliteRoutes.js'),  
     path.resolve(__dirname, './controllers/satelliteController.js')  
   ],
