@@ -30,6 +30,9 @@ app.get('/', (req, res) => {
     SWAGGER
 */
 const path = require('path');
+const SatelliteModels = require("./models/satelliteModel"); 
+const { SatelliteFullSchema, SatelliteSummarisedSchema } = SatelliteModels;
+
 
 // Define options for Swagger
 const swaggerOptions = {
@@ -45,11 +48,18 @@ const swaggerOptions = {
         url: 'http://localhost:3000/api',  // Server URL
       },
     ],
+    components: {
+      schemas: {
+        SatelliteFull: { type: "object", properties: SatelliteFullSchema.obj  },
+        SatelliteSummarised: { type: "object", properties: SatelliteSummarisedSchema.obj }
+      },
+    },
   },
   apis: [
-    path.resolve(__dirname, './routes/satelliteRoutes.js'),  // Absolute path to routes file
-    path.resolve(__dirname, './controllers/satelliteController.js')  // Absolute path to controller file
+    path.resolve(__dirname, './routes/satelliteRoutes.js'),  
+    path.resolve(__dirname, './controllers/satelliteController.js')  
   ],
+  
 };
 
 // Generate Swagger documentation
