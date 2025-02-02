@@ -312,7 +312,7 @@ exports.updateSatellite = async (req, res) => {
 };
 
 
-// Remember setting this as 'marked as deleted'
+
 // Check out condition of name/slug unique with deleted entities
 
 

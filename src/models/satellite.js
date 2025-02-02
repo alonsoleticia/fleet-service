@@ -125,18 +125,6 @@ const SatelliteSummarisedSchema = new mongoose.Schema({
   orbit: OrbitSchema
 });
 
-
-// Middleware to exclude deleted entities in the queries.
-// To explicitly include the, it is needed to use: Satellite.find({ includeDeleted: true });
-SatelliteSchema.pre(/^find/, function (next) {
-  if (!this.getFilter().includeDeleted) {
-    this.setQuery({ ...this.getFilter(), deleted: false });
-  }
-  next();
-});
-
-
-
 // Export models and schemas
 module.exports = {
   Satellite: mongoose.models.Satellite || mongoose.model("Satellite", SatelliteSchema),
