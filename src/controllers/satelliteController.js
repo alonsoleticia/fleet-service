@@ -1,4 +1,4 @@
-const Satellite = require('../models/satelliteModel');
+const { Satellite } = require('../models/satelliteModel');
 
 // Create a new satellite
 /**
