@@ -315,14 +315,59 @@ exports.updateSatellite = async (req, res) => {
 // Remember setting this as 'marked as deleted'
 // Check out condition of name/slug unique with deleted entities
 
+
+// Delete satellite by ID (soft delete)
+/**
+ * @swagger
+ * /api/satellites/{id}:
+ *   delete:
+ *     summary: Soft delete a satellite
+ *     tags: [Satellites]
+ *     description: |
+ *       Marks the satellite as deleted without removing it from the database.
+ *       This is a soft delete operation.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Satellite ID to mark as deleted
+ *     responses:
+ *       200:
+ *         description: Satellite marked as deleted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Satellite marked as deleted"
+ *       404:
+ *         description: Satellite not found
+ *       500:
+ *         description: Internal server error
+ */
 exports.deleteSatellite = async (req, res) => {
   try {
-    const satellite = await Satellite.findByIdAndDelete(req.params.id);  // Delete satellite by ID
+    const satellite = await Satellite.findByIdAndUpdate(
+      req.params.id,
+      { 
+        deleted: true,  
+        deletedAt: new Date()
+      },
+      { new: true }  // Returns the updated object
+    );
+
     if (!satellite) {
-      return res.status(404).json({ message: 'Satellite not found' });  // Respond with 404 if satellite is not found
+      return res.status(404).json({ message: 'Satellite not found' });
     }
-    res.status(200).json({ message: 'Satellite deleted' });  // Respond with success message
-  } catch (err) {
-    res.status(500).json({ error: err.message });  // Respond with error if something goes wrong
+
+    res.status(200).json({ message: 'Satellite has been soft deleted', satellite });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: `An error occurred. Details: ${error.message}` });
   }
 };
+

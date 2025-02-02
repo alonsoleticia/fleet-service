@@ -67,10 +67,21 @@ const SATELLITE_STATUSES = ['active', 'inactive'];
  *           description: User who last modified the satellite in the database.
  *         orbit:
  *           $ref: '#/components/schemas/Orbit'
+ *         deleted:
+ *           type: boolean
+ *           default: false
+ *           description: Whether the satellite has been soft deleted or not.
+  *         deletedAt:
+ *           type: Date
+ *           default: null
+ *           description: Date in which the satellite was soft deleted if applies.
  * 
  *     SatelliteSummarised:
  *       type: object
  *       properties:
+ *         _id:
+ *           type: string
+ *           description: Unique identifier of the satellite (automatically created).
  *         name:
  *           $ref: '#/components/schemas/Name'
  *         slug:
@@ -98,7 +109,10 @@ const SatelliteSchema = new mongoose.Schema({
   company: { type: String, default: null }, // FIXME: related to 'companies' model (or null)
   createdBy: { type: String }, // FIXME: related to 'users' model
   updatedBy: { type: String }, // FIXME: related to 'users' model
-  orbit: OrbitSchema
+  orbit: OrbitSchema,
+  deleted: { type: Boolean, default: false },
+  deletedAt: { type: Date, default: null }
+
 }, {
   timestamps: true // Automatically adds 'createdAt' and 'updatedAt' fields
 });
@@ -110,6 +124,18 @@ const SatelliteSummarisedSchema = new mongoose.Schema({
   slug: SlugSchema,
   orbit: OrbitSchema
 });
+
+
+// Middleware to exclude deleted entities in the queries.
+// To explicitly include the, it is needed to use: Satellite.find({ includeDeleted: true });
+SatelliteSchema.pre(/^find/, function (next) {
+  if (!this.getFilter().includeDeleted) {
+    this.setQuery({ ...this.getFilter(), deleted: false });
+  }
+  next();
+});
+
+
 
 // Export models and schemas
 module.exports = {
