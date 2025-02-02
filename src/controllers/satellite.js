@@ -1,4 +1,4 @@
-const { Satellite } = require('../models/satelliteModel');
+const { Satellite } = require('../models/satellite');
 
 // Create a new satellite
 /**
@@ -109,6 +109,7 @@ exports.createSatellite = async (req, res) => {
 };
 
 
+// Get all satellites (with/without details)
 /**
  * @swagger
  * /api/satellites:
@@ -148,8 +149,9 @@ exports.getAllSatellites = async (req, res) => {
       - if details === "true" => all fields are considered
       - otherwise => a subset of fields is considered 
     */
-    const { details } = req.query;
-    let consideredFields = details === "true" ? '' : '_id name';
+      const { details } = req.query;
+      const showFullDetails = details === "true";      
+      let consideredFields = showFullDetails ? '' : '_id name';
 
     const satellites = await Satellite.find().select(consideredFields);  
     res.status(200).json(satellites);  
@@ -161,33 +163,63 @@ exports.getAllSatellites = async (req, res) => {
 };
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// Get satellite by ID (with/without details)
+/**
+ * @swagger
+ * /api/satellites:
+ *   get:
+ *     summary: Get satellite by ID
+ *     tags: [Satellites]
+ *     description: | 
+ *       Returns the information corresponding to the requested satellite.
+ *       - If **details=true**, all fields are returned.
+ *       - If **details is omitted or false**, only `_id` and `name` are returned.
+ *     parameters: 
+ *     - in: query
+ *       name: details
+ *       schema:
+ *         type: string
+ *         enum: ["true", "false"]
+ *       required: false
+ *       description: "Use 'true' to get full satellite details. Default is summary mode."
+ *     responses:
+ *       200:
+ *         description: Satellite information
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 oneOf:
+ *                   - $ref: '#/components/schemas/SatelliteFull'
+ *                   - $ref: '#/components/schemas/SatelliteSummarised'   
+ *       404:
+ *         description: Satellite not found            
+ *       500:
+ *         description: Internal server error 
+ */ 
 exports.getSatelliteById = async (req, res) => {
   try {
-    const satellite = await Satellite.findById(req.params.id);  // Find a satellite by its ID
+    
+    /* 
+    A query param has been included to reuse a flexible GET endpoint including or not all the information of the entity:
+      - if details === "true" => all fields are considered
+      - otherwise => a subset of fields is considered 
+    */
+    const { details } = req.query;
+    const showFullDetails = details === "true";      
+    let consideredFields = showFullDetails ? '' : '_id name';
+
+    const satellite = await Satellite.findById(req.params.id).select(consideredFields);  
+
     if (!satellite) {
-      return res.status(404).json({ message: 'Satellite not found' });  // Respond with 404 if satellite is not found
+      return res.status(404).json({ message: 'Satellite not found' }); 
     }
-    res.status(200).json(satellite);  // Respond with the found satellite
-  } catch (err) {
-    res.status(500).json({ error: err.message });  // Respond with error if something goes wrong
+    res.status(200).json(satellite); 
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: `An error has occurred while retrieving satellite from database. Details: ${error}` });
   }
 };
 

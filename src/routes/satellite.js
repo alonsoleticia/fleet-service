@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const satelliteController = require('../controllers/satelliteController');
+const satelliteController = require('../controllers/satellite');
 
 // Routes to handle satellites
 router.post('/', satelliteController.createSatellite);  // Create a new satellite
