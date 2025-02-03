@@ -125,6 +125,19 @@ const SatelliteSummarisedSchema = new mongoose.Schema({
   orbit: OrbitSchema
 });
 
+// Middleware to ignore by default the 'marked as deleted' elements:
+SatelliteSchema.pre(/^find/, function(next) {
+  this.find({ deleted: false }); 
+  next();
+});
+
+SatelliteSummarisedSchema.pre(/^find/, function(next) {
+  this.find({ deleted: false }); 
+  next();
+});
+
+
+
 // Export models and schemas
 module.exports = {
   Satellite: mongoose.models.Satellite || mongoose.model("Satellite", SatelliteSchema),
