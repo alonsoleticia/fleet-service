@@ -91,8 +91,8 @@ const SATELLITE_STATUSES = ['active', 'inactive'];
  */
 
 // Independent schemas for reuse
-const NameSchema = { type: String, required: true, unique: true };
-const SlugSchema = { type: String, required: true, unique: true };
+const NameSchema = { type: String, required: true}; // unique: true => set later within an index
+const SlugSchema = { type: String, required: true}; // unique: true => set later within an index
 
 const OrbitSchema = new mongoose.Schema({
   longitude: { type: Number, required: true },
@@ -101,7 +101,7 @@ const OrbitSchema = new mongoose.Schema({
   height: { type: Number, default: 35786.063 } // Kms
 });
 
-// Main satellite schema
+// Full satellite schema
 const SatelliteSchema = new mongoose.Schema({
   name: NameSchema,
   slug: SlugSchema,
@@ -118,6 +118,7 @@ const SatelliteSchema = new mongoose.Schema({
 });
 
 // Summarized satellite schema
+// FIXME: investigate whether not including the 'deleted' could lead to a problem when explicitly requesting deleted elemenets
 const SatelliteSummarisedSchema = new mongoose.Schema({
   _id: mongoose.Schema.Types.ObjectId,
   name: NameSchema,
@@ -125,7 +126,7 @@ const SatelliteSummarisedSchema = new mongoose.Schema({
   orbit: OrbitSchema
 });
 
-// Middleware to ignore by default the 'marked as deleted' elements:
+// Middlewares to ignore by default the 'marked as deleted' elements:
 SatelliteSchema.pre(/^find/, function(next) {
   this.find({ deleted: false }); 
   next();
@@ -137,11 +138,32 @@ SatelliteSummarisedSchema.pre(/^find/, function(next) {
 });
 
 
+/**
+ * Ensures the uniqueness of the `name` and `slug` fields.
+ * 
+ * - `unique: true`: Enforces uniqueness.
+ * - `partialFilterExpression: { deleted: false }`: Applies uniqueness only if `deleted` is `false`.
+ * - If a satellite is marked as deleted (`deleted: true`), MongoDB allows creating another with the same name/slug.
+ */
+SatelliteSchema.index({ name: 1 }, { unique: true, partialFilterExpression: { deleted: false } });
+SatelliteSchema.index({ slug: 1 }, { unique: true, partialFilterExpression: { deleted: false } });
+SatelliteSummarisedSchema.index({ name: 1 }, { unique: true, partialFilterExpression: { deleted: false } });
+SatelliteSummarisedSchema.index({ slug: 1 }, { unique: true, partialFilterExpression: { deleted: false } });
+
+
+const Satellite = mongoose.models.Satellite || mongoose.model("Satellite", SatelliteSchema);
+const SatelliteSummarised = mongoose.models.SatelliteSummarised || mongoose.model("SatelliteSummarised", SatelliteSummarisedSchema);
+
+
+// Ensure index creation
+Satellite.init()
+  .then(() => console.log("Indexes ensured for Satellite"))
+  .catch(err => console.error("Error ensuring indexes:", err));
 
 // Export models and schemas
 module.exports = {
-  Satellite: mongoose.models.Satellite || mongoose.model("Satellite", SatelliteSchema),
-  SatelliteSummarised: mongoose.models.SatelliteSummarised || mongoose.model("SatelliteSummarised", SatelliteSummarisedSchema),
+  Satellite,
+  SatelliteSummarised,
   SatelliteSchema,
   SatelliteSummarisedSchema
 };

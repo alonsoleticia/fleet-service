@@ -292,11 +292,6 @@ const getSelectedFieldsInResponse = (req) => {
 
 
 
-
-
-
-
-
 // Reduce the update scope to minimum
 
 exports.updateSatellite = async (req, res) => {
