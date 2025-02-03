@@ -119,8 +119,8 @@ exports.createSatellite = async (req, res) => {
  *     tags: [Satellites]
  *     description: | 
  *       Returns a list of all satellites in the system.
- *       - If **details=true**, all fields are returned.
- *       - If **details is omitted or false**, only `_id` and `name` are returned.
+ *       - If **details=true**, all fields are returned (see **Satellite** schema)
+ *       - If **details is omitted or false**, a summarized version is returned (see **SatelliteSummarised** schema).
  *     parameters: 
  *     - in: query
  *       name: details
@@ -164,8 +164,8 @@ exports.getAllSatellites = async (req, res) => {
  *     tags: [Satellites]
  *     description: | 
  *       Returns the information corresponding to the requested satellite.
- *       - If **details=true**, all fields are returned.
- *       - If **details is omitted or false**, only `_id` and `name` are returned.
+ *       - If **details=true**, all fields are returned (see **Satellite** schema)
+ *       - If **details is omitted or false**, a summarized version is returned (see **SatelliteSummarised** schema).
  *     parameters: 
  *     - in: query
  *       name: details
@@ -210,8 +210,8 @@ exports.getSatelliteById = async (req, res) => {
  *     tags: [Satellites]
  *     description: | 
  *       Returns the information corresponding to the requested satellite.
- *       - If **details=true**, all fields are returned.
- *       - If **details is omitted or false**, only `_id` and `name` are returned.
+ *       - If **details=true**, all fields are returned (see **Satellite** schema)
+ *       - If **details is omitted or false**, a summarized version is returned (see **SatelliteSummarised** schema).
  *     parameters: 
  *     - in: query
  *       name: details
