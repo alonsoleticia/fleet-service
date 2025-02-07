@@ -242,27 +242,17 @@ exports.getSatelliteByName = async (req, res) => {
  * Retrieves a satellite from the database based on the provided filter.
  *
  * @async
- * @param {Object} req - Express request object.
- * @param {Object} res - Express response object.
  * @param {Object} filter - Query filter to find the satellite in the database.
- * @returns {Promise<void>} Does not return a value directly but sends an HTTP response with the satellite data or an error.
- *
- * @throws {Error} Returns a 500 status code if an unexpected error occurs during the query.
- * @throws {Error} Returns a 404 status code if the satellite is not found.
+ * @param {Object} details - Boolean flag to determine the fields to retrieve.
+ * @returns {Promise<Object|null>} Returns the satellite object if found, otherwise null.
  */
-const getSatellite = async (req, res, filter) => {
+const findSatellite = async (filter, details) => {
   try {
-    const selectedFields = getSelectedFieldsInResponse(req);
-    const satellite = await Satellite.findOne(filter).select(selectedFields);
-
-    if (!satellite) {
-      return res.status(404).json({ message: 'Satellite not found' });
-    }
-
-    res.status(200).json(satellite);
+    const selectedFields = details ? {} : getSelectedFieldsInResponse(); 
+    return await Satellite.findOne(filter).select(selectedFields);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: `An error occurred. Details: ${error}` });
+    throw new Error(`Database query failed: ${error.message}`);
   }
 };
 
