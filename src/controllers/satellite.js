@@ -61,8 +61,9 @@ const SUMMARISED_FIELDS = Object.keys(SatelliteSummarised.schema.paths).join(' '
 exports.createSatellite = async (req, res) => {
   try {
 
+    const newSatelliteInputData = req.body;
     // If there is an error thrown from this method, it will be captured in the catch with a ValidationError personalized exception:
-    validateSatelliteInformation(req.body);
+    validateSatelliteInformation(newSatelliteInputData);
 
     const { name, slug, status, company, createdBy, updatedBy, orbit } = req.body;
 
@@ -136,7 +137,8 @@ exports.createSatellite = async (req, res) => {
  */ 
 exports.getAllSatellites = async (req, res) => {
   try {
-    const selectedFields = getSelectedFieldsInResponse(req);
+    const { detailed } = req.query;
+    const selectedFields = getSelectedFieldsInResponse(detailed);
     const satellites = await Satellite.find().select(selectedFields);  
     res.status(200).json(satellites);  
 
@@ -190,7 +192,9 @@ exports.getAllSatellites = async (req, res) => {
 // Uses aux function with corresponding filtering option to retrieve the info from DB:
 exports.getSatelliteById = async (req, res) => {
   try {
-    const satellite = await findSatellite({ _id: req.params.id }, req.query.details === "true");
+    const filter = { _id: req.params.id };
+    const detailed = req.query;
+    const satellite = await findSatellite(filter, detailed);
     
     if (!satellite) {
       return res.status(404).json({ message: "Satellite not found" });
@@ -247,7 +251,9 @@ exports.getSatelliteById = async (req, res) => {
  */ 
 exports.getSatelliteByName = async (req, res) => {
   try {
-    const satellite = await findSatellite({ name: req.params.name }, req.query.details === "true");
+    const filter = { name: req.params.name };
+    const detailed = req.query;
+    const satellite = await findSatellite(filter, detailed);
     
     if (!satellite) {
       return res.status(404).json({ message: "Satellite not found" });
@@ -268,13 +274,13 @@ exports.getSatelliteByName = async (req, res) => {
  * @param {Object} details - Boolean flag to determine the fields to retrieve.
  * @returns {Promise<Object|null>} Returns the satellite object if found, otherwise null.
  */
-const findSatellite = async (filter, details) => {
+const findSatellite = async (filter, detailed) => {
   try {
-    const selectedFields = details ? {} : getSelectedFieldsInResponse(); 
-    return await Satellite.findOne(filter).select(selectedFields);
+    const selectedFields = getSelectedFieldsInResponse(detailed); 
+    return await Satellite.findOne(filter).select(selectedFields);  
   } catch (error) {
     console.error(error);
-    throw new Error(`Database query failed: ${error.message}`);
+    throw new Error(`An error has occurred while requesting the satellite from databas. Details: ${error.message}`);
   }
 };
 
@@ -287,9 +293,8 @@ const findSatellite = async (filter, details) => {
  * @note This function manages the level of detail in database queries.
  * @todo Consider moving this function to a utility module.
  */
-const getSelectedFieldsInResponse = (req) => {
-  const { details } = req.query;
-  const showFullDetails = details === "true";
+const getSelectedFieldsInResponse = (detailed) => {
+  const showFullDetails = detailed === "true";
   return showFullDetails ? ALL_FIELDS : SUMMARISED_FIELDS;
 }
 
@@ -421,20 +426,26 @@ exports.updateSatelliteById = async (req, res) => {
     //FIXME: extend implementation for updateSatelliteByName
     //REVIEW: que devuelva --verbose el satélite
 
+    const updatedSatelliteInputData = req.body;
     // If there is an error thrown from this method, it will be captured in the catch with a ValidationError personalized exception:
-    validateSatelliteInformation(req.body);
+    validateSatelliteInformation(updatedSatelliteInputData);
+   
+    const filter = { _id: req.params.id };
+    const detailed = req.query;
+    const oldSatelliteInfo = await findSatellite(filter, detailed)
+    // Use toObject() to convert the Mongoose doc to a normal Object
+    const oldSatelliteData = oldSatelliteInfo ? oldSatelliteInfo.toObject() : null;
 
-    const oldSatelliteInfo = await getSatellite(req, res, { _id: req.params.id });  
-
-    if (req.body.name !== oldSatelliteInfo.name || req.body.slug !== oldSatelliteInfo.slug) {
-      return res.status(409).json({ message: 'Satellite name or slug cannot be updated.' });
+    if (updatedSatelliteInputData._id !== oldSatelliteData._id){
+      return res.status(409).json({ message: 'Satellite internal ID cannot be modified. It is immutable.' });
     }
 
-    const satellite = await Satellite.findOneAndUpdate(
-      { _id: req.params.id },
-      req.body,
-      { returnDocument: "after" } // Returns updated document
-    );
+    if (updatedSatelliteInputData.name !== oldSatelliteData.name || updatedSatelliteInputData.slug !== oldSatelliteData.slug) {
+      return res.status(409).json({ message: 'Satellite name or slug cannot be modified. They are immutable.' });
+    }
+
+    const satellite = await Satellite.findOneAndUpdate(filter, updatedSatelliteInputData, { returnDocument: "after" }  ); // Returns updated document
+  
     
     // returns updated satellite
     if (!satellite) {
