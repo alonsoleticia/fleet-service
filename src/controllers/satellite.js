@@ -1,4 +1,5 @@
 const { Satellite, SatelliteSummarised } = require('../models/satellite');
+const ValidationError = require("../utils/ValidationError");
 const ALL_FIELDS = ''
 const SUMMARISED_FIELDS = Object.keys(SatelliteSummarised.schema.paths).join(' ');
 
@@ -59,24 +60,11 @@ const SUMMARISED_FIELDS = Object.keys(SatelliteSummarised.schema.paths).join(' '
  */
 exports.createSatellite = async (req, res) => {
   try {
+
+    // If there is an error thrown from this method, it will be captured in the catch with a ValidationError personalized exception:
+    validateSatelliteInformation(req.body);
+
     const { name, slug, status, company, createdBy, updatedBy, orbit } = req.body;
-
-    // Required fields validation:
-    if (!name || !slug || !orbit) {
-      return res.status(400).json({ error: "The fields 'name', 'slug' and 'orbit' are required." });
-    }
-
-    // Verify the types of the fields:
-    if (typeof name !== "string" || typeof slug !== "string" || typeof orbit !== "object" || orbit === null){
-      return res.status(400).json({ error: "The fields 'name', 'slug' or 'orbit' do not present the correct type." });
-    }
- 
-    // Mongoose already verifies that the 'status' in case of provided is within the expected constraints.
-    
-    // Verify the consistency of the orbit information:
-    if (orbit.latitude < -90 || orbit.latitude > 90 || orbit.longitude < -180 || orbit.longitude > 180 || orbit.height <= 0){
-      return res.status(400).json({ error: "Orbital information out of range." });
-    }
 
     // Check if another element with the same 'name' or 'slug' already exists in the database:
     const existingSatellite = await Satellite.findOne({ $or: [{ name }, { slug }] });
@@ -105,8 +93,11 @@ exports.createSatellite = async (req, res) => {
     return res.status(201).json(satelliteReqData);
 
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: `An error has occurred while saving the satellite in database. Details: ${error}` });
+      if (error instanceof ValidationError){
+        return res.status(400).json({ error: error.message });
+      }else{
+        return res.status(500).json({ error: `An error has occurred while saving the satellite in database. Details: ${error}` });
+      }
   }
 };
 
@@ -291,25 +282,164 @@ const getSelectedFieldsInResponse = (req) => {
 }
 
 
+/**
+ * Validates the satellite information before saving it to the database.
+ *
+ * @param {Object} data - The satellite data to validate.
+ * @param {string} data.name - The unique name of the satellite.
+ * @param {string} data.slug - The unique slug (extended name) of the satellite.
+ * @param {string} [data.status] - The status of the satellite (e.g., "active", "inactive").
+ * @param {string} [data.company] - The company operating the satellite (optional).
+ * @param {string} [data.createdBy] - The user who created the satellite (optional).
+ * @param {string} [data.updatedBy] - The user who last updated the satellite (optional).
+ * @param {Object} data.orbit - The orbit information of the satellite.
+ * @param {number} data.orbit.longitude - The orbit longitude (positive East, negative West).
+ * @param {number} data.orbit.latitude - The orbit latitude (positive North, negative South).
+ * @param {number} data.orbit.inclination - The orbit inclination angle.
+ * @param {number} data.orbit.height - The orbit height in kilometers.
+ * 
+ * @throws {ValidationError} If any required field is missing or has an incorrect type.
+ * @throws {ValidationError} If orbital information is out of the valid range.
+ * 
+ * @returns {boolean} Returns `true` if validation is successful.
+ */
+const validateSatelliteInformation = (data) => {
+  
+  const { name, slug, status, company, createdBy, updatedBy, orbit } = data;
+  // Required fields validation:
+  if (!name || !slug || !orbit) {
+    throw new ValidationError("The fields 'name', 'slug' and 'orbit' are required.")
+  }
 
-// Reduce the update scope to minimum
+  // Verify the types of the fields:
+  if (typeof name !== "string" || typeof slug !== "string" || typeof orbit !== "object" || orbit === null){
+    throw new ValidationError("The fields 'name', 'slug' or 'orbit' do not present the correct type.")
+  }
 
-exports.updateSatellite = async (req, res) => {
+  // Mongoose already verifies that the 'status' in case of provided is within the expected constraints.
+  
+  // Verify the consistency of the orbit information:
+  if (orbit.latitude < -90 || orbit.latitude > 90 || orbit.longitude < -180 || orbit.longitude > 180 || orbit.height <= 0){
+    throw new ValidationError("Orbital information out of range.")
+  }
+  // TODO: verify consistency of 'company' field.
+  return true;
+}
+
+
+/**
+ * @swagger
+ * /api/satellites/id/{id}:
+ *   put:
+ *     summary: Update a satellite by its ID
+ *     tags: [Satellites]
+ *     description: Updates an existing satellite's information, except for its name or slug.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The unique identifier of the satellite to update.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Satellite'
+ *     responses:
+ *       200:
+ *         description: Satellite updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Satellite'
+ *       400:
+ *         description: Validation error in the provided data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error details
+ *               example:
+ *                 error: "The fields 'name', 'slug' and 'orbit' are required."
+ *       404:
+ *         description: Satellite not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error details
+ *               example:
+ *                 message: "Satellite not found"
+ *       409:
+ *         description: Conflict - Name or slug cannot be updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error details
+ *               example:
+ *                 message: "Satellite name or slug cannot be updated."
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error details
+ *               example:
+ *                 error: "An unexpected error occurred while updating the satellite."
+ */
+exports.updateSatelliteById = async (req, res) => {
   try {
-    const satellite = await Satellite.findByIdAndUpdate(req.params.id, req.body, { new: true });  // Update satellite by ID
-    if (!satellite) {
-      return res.status(404).json({ message: 'Satellite not found' });  // Respond with 404 if satellite is not found
+
+    //FIXME: extend implementation for updateSatelliteByName
+    //REVIEW: que devuelva --verbose el satélite
+
+    // If there is an error thrown from this method, it will be captured in the catch with a ValidationError personalized exception:
+    validateSatelliteInformation(req.body);
+
+    const oldSatelliteInfo = await getSatellite(req, res, { _id: req.params.id });  
+
+    if (req.body.name !== oldSatelliteInfo.name || req.body.slug !== oldSatelliteInfo.slug) {
+      return res.status(409).json({ message: 'Satellite name or slug cannot be updated.' });
     }
+
+    const satellite = await Satellite.findOneAndUpdate(
+      { _id: req.params.id },
+      req.body,
+      { returnDocument: "after" } // Returns updated document
+    );
+    
+    // returns updated satellite
+    if (!satellite) {
+      return res.status(404).json({ message: 'Satellite not found' });  
+    }
+
     res.status(200).json(satellite);  // Respond with the updated satellite
-  } catch (err) {
-    res.status(500).json({ error: err.message });  // Respond with error if something goes wrong
+    
+  } catch (error) {
+    console.error(error)
+    if (error instanceof ValidationError){
+      return res.status(400).json({ error: error.message });
+    }else{
+      return res.status(500).json({ error: error.message });       
+    }
   }
 };
-
-
-
-// Check out condition of name/slug unique with deleted entities
-
 
 // Delete satellite by ID (soft delete)
 /**
