@@ -187,23 +187,22 @@ exports.getAllSatellites = async (req, res) => {
  *       500:
  *         description: Internal server error 
  */ 
+// Uses aux function with corresponding filtering option to retrieve the info from DB:
 exports.getSatelliteById = async (req, res) => {
-  // Uses aux function with corresponding filtering option to retrieve the info from DB:
-  exports.getSatelliteById = async (req, res) => {
-    try {
-      const satellite = await findSatellite({ _id: req.params.id }, req.query.details === "true");
-      
-      if (!satellite) {
-        return res.status(404).json({ message: "Satellite not found" });
-      }
-      
-      return res.status(200).json(satellite);
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({ error: `An error occurred. Details: ${error.message}` });
+  try {
+    const satellite = await findSatellite({ _id: req.params.id }, req.query.details === "true");
+    
+    if (!satellite) {
+      return res.status(404).json({ message: "Satellite not found" });
     }
-  };
+    
+    return res.status(200).json(satellite);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: `An error occurred. Details: ${error.message}` });
+  }
 };
+
 
 // Get satellite by name (with/without details)
 /**
