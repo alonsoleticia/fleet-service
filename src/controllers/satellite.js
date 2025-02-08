@@ -111,11 +111,11 @@ exports.createSatellite = async (req, res) => {
  *     tags: [Satellites]
  *     description: | 
  *       Returns a list of all satellites in the system.
- *       - If **details=true**, all fields are returned (see **Satellite** schema)
- *       - If **details is omitted or false**, a summarized version is returned (see **SatelliteSummarised** schema).
+ *       - If **detailed=true**, all fields are returned (see **Satellite** schema)
+ *       - If **detailed is omitted or false**, a summarized version is returned (see **SatelliteSummarised** schema).
  *     parameters: 
  *     - in: query
- *       name: details
+ *       name: detailed
  *       schema:
  *         type: string
  *         enum: ["true", "false"]
@@ -157,11 +157,11 @@ exports.getAllSatellites = async (req, res) => {
  *     tags: [Satellites]
  *     description: | 
  *       Returns the information corresponding to the requested satellite.
- *       - If **details=true**, all fields are returned (see **Satellite** schema)
- *       - If **details is omitted or false**, a summarized version is returned (see **SatelliteSummarised** schema).
+ *       - If **detailed=true**, all fields are returned (see **Satellite** schema)
+ *       - If **detailed is omitted or false**, a summarized version is returned (see **SatelliteSummarised** schema).
  *     parameters: 
  *     - in: query
- *       name: details
+ *       name: detailed
  *       schema:
  *         type: string
  *         enum: ["true", "false"]
@@ -189,24 +189,13 @@ exports.getAllSatellites = async (req, res) => {
  *       500:
  *         description: Internal server error 
  */ 
-// Uses aux function with corresponding filtering option to retrieve the info from DB:
 exports.getSatelliteById = async (req, res) => {
-  try {
-    const filter = { _id: req.params.id };
-    const detailed = req.query;
-    const satellite = await findSatellite(filter, detailed);
-    
-    if (!satellite) {
-      return res.status(404).json({ message: "Satellite not found" });
-    }
-    
-    return res.status(200).json(satellite);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: `An error occurred. Details: ${error.message}` });
-  }
-};
+  const filter = { _id: req.params.id };
+  const { detailed } = req.query;
 
+  const result = await getSatelliteByFilter(filter, detailed);
+  return res.status(result.status).json(result.data);
+};
 
 // Get satellite by name (with/without details)
 /**
@@ -217,11 +206,11 @@ exports.getSatelliteById = async (req, res) => {
  *     tags: [Satellites]
  *     description: | 
  *       Returns the information corresponding to the requested satellite.
- *       - If **details=true**, all fields are returned (see **Satellite** schema)
- *       - If **details is omitted or false**, a summarized version is returned (see **SatelliteSummarised** schema).
+ *       - If **detailed=true**, all fields are returned (see **Satellite** schema)
+ *       - If **detailed is omitted or false**, a summarized version is returned (see **SatelliteSummarised** schema).
  *     parameters: 
  *     - in: query
- *       name: details
+ *       name: detailed
  *       schema:
  *         type: string
  *         enum: ["true", "false"]
@@ -250,100 +239,14 @@ exports.getSatelliteById = async (req, res) => {
  *         description: Internal server error 
  */ 
 exports.getSatelliteByName = async (req, res) => {
-  try {
-    const filter = { name: req.params.name };
-    const detailed = req.query;
-    const satellite = await findSatellite(filter, detailed);
-    
-    if (!satellite) {
-      return res.status(404).json({ message: "Satellite not found" });
-    }
-    
-    return res.status(200).json(satellite);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: `An error occurred. Details: ${error.message}` });
-  }
+  const filter = { name: req.params.name };
+  const { detailed } = req.query;
+
+  const result = await getSatelliteByFilter(filter, detailed);
+  return res.status(result.status).json(result.data);
 };
 
-/**
- * Retrieves a satellite from the database based on the provided filter.
- *
- * @async
- * @param {Object} filter - Query filter to find the satellite in the database.
- * @param {Object} details - Boolean flag to determine the fields to retrieve.
- * @returns {Promise<Object|null>} Returns the satellite object if found, otherwise null.
- */
-const findSatellite = async (filter, detailed) => {
-  try {
-    const selectedFields = getSelectedFieldsInResponse(detailed); 
-    return await Satellite.findOne(filter).select(selectedFields);  
-  } catch (error) {
-    console.error(error);
-    throw new Error(`An error has occurred while requesting the satellite from databas. Details: ${error.message}`);
-  }
-};
-
-/**
- * Determines which fields should be selected in the response based on the query parameter.
- * 
- * @param {Object} req - Express request object containing query parameters.
- * @returns {string} A string representing the selected fields.
- *
- * @note This function manages the level of detail in database queries.
- * @todo Consider moving this function to a utility module.
- */
-const getSelectedFieldsInResponse = (detailed) => {
-  const showFullDetails = detailed === "true";
-  return showFullDetails ? ALL_FIELDS : SUMMARISED_FIELDS;
-}
-
-
-/**
- * Validates the satellite information before saving it to the database.
- *
- * @param {Object} data - The satellite data to validate.
- * @param {string} data.name - The unique name of the satellite.
- * @param {string} data.slug - The unique slug (extended name) of the satellite.
- * @param {string} [data.status] - The status of the satellite (e.g., "active", "inactive").
- * @param {string} [data.company] - The company operating the satellite (optional).
- * @param {string} [data.createdBy] - The user who created the satellite (optional).
- * @param {string} [data.updatedBy] - The user who last updated the satellite (optional).
- * @param {Object} data.orbit - The orbit information of the satellite.
- * @param {number} data.orbit.longitude - The orbit longitude (positive East, negative West).
- * @param {number} data.orbit.latitude - The orbit latitude (positive North, negative South).
- * @param {number} data.orbit.inclination - The orbit inclination angle.
- * @param {number} data.orbit.height - The orbit height in kilometers.
- * 
- * @throws {ValidationError} If any required field is missing or has an incorrect type.
- * @throws {ValidationError} If orbital information is out of the valid range.
- * 
- * @returns {boolean} Returns `true` if validation is successful.
- */
-const validateSatelliteInformation = (data) => {
-  
-  const { name, slug, status, company, createdBy, updatedBy, orbit } = data;
-  // Required fields validation:
-  if (!name || !slug || !orbit) {
-    throw new ValidationError("The fields 'name', 'slug' and 'orbit' are required.")
-  }
-
-  // Verify the types of the fields:
-  if (typeof name !== "string" || typeof slug !== "string" || typeof orbit !== "object" || orbit === null){
-    throw new ValidationError("The fields 'name', 'slug' or 'orbit' do not present the correct type.")
-  }
-
-  // Mongoose already verifies that the 'status' in case of provided is within the expected constraints.
-  
-  // Verify the consistency of the orbit information:
-  if (orbit.latitude < -90 || orbit.latitude > 90 || orbit.longitude < -180 || orbit.longitude > 180 || orbit.height <= 0){
-    throw new ValidationError("Orbital information out of range.")
-  }
-  // TODO: verify consistency of 'company' field.
-  return true;
-}
-
-
+// Update satellite by ID 
 /**
  * @swagger
  * /api/satellites/id/{id}:
@@ -423,20 +326,23 @@ const validateSatelliteInformation = (data) => {
 exports.updateSatelliteById = async (req, res) => {
   try {
 
-    //FIXME: extend implementation for updateSatelliteByName
-    //REVIEW: que devuelva --verbose el satélite
+    // Getting satellite under analysis with old information:
+    const filter = { _id: req.params.id };
+    const detailed = "true";
+    const getSatelliteResponse = await getSatelliteByFilter(filter, detailed)
+    if (getSatelliteResponse.status != 200){
+      return res.status(getSatelliteResponse.status).json({ message: getSatelliteResponse.data });
+    }
 
+    const oldSatelliteInfo = getSatelliteResponse.data;
+    const oldSatelliteData = oldSatelliteInfo ? oldSatelliteInfo.toObject() : null;     // Use toObject() to convert the Mongoose doc to a normal Object
+
+    // Validate feasibility of the updated information for the satellite:
+    // Any error will be captured in the catch with a ValidationError personalized exception:
     const updatedSatelliteInputData = req.body;
-    // If there is an error thrown from this method, it will be captured in the catch with a ValidationError personalized exception:
     validateSatelliteInformation(updatedSatelliteInputData);
    
-    const filter = { _id: req.params.id };
-    const detailed = req.query;
-    const oldSatelliteInfo = await findSatellite(filter, detailed)
-    // Use toObject() to convert the Mongoose doc to a normal Object
-    const oldSatelliteData = oldSatelliteInfo ? oldSatelliteInfo.toObject() : null;
-
-    if (updatedSatelliteInputData._id !== oldSatelliteData._id){
+    if (updatedSatelliteInputData._id !== undefined && updatedSatelliteInputData._id !== oldSatelliteData._id){
       return res.status(409).json({ message: 'Satellite internal ID cannot be modified. It is immutable.' });
     }
 
@@ -444,15 +350,8 @@ exports.updateSatelliteById = async (req, res) => {
       return res.status(409).json({ message: 'Satellite name or slug cannot be modified. They are immutable.' });
     }
 
-    const satellite = await Satellite.findOneAndUpdate(filter, updatedSatelliteInputData, { returnDocument: "after" }  ); // Returns updated document
-  
-    
-    // returns updated satellite
-    if (!satellite) {
-      return res.status(404).json({ message: 'Satellite not found' });  
-    }
-
-    res.status(200).json(satellite);  // Respond with the updated satellite
+    const satellite = await Satellite.findOneAndUpdate(filter, updatedSatelliteInputData, { returnDocument: "after" }  ); // Returns updated document  
+    res.status(200).json(satellite);  
     
   } catch (error) {
     console.error(error)
@@ -463,6 +362,10 @@ exports.updateSatelliteById = async (req, res) => {
     }
   }
 };
+
+// Update satellite by name
+
+
 
 // Delete satellite by ID (soft delete)
 /**
@@ -519,3 +422,120 @@ exports.deleteSatellite = async (req, res) => {
   }
 };
 
+
+
+// Determines which fields should be selected in the response based on the query parameter
+/**
+ * Determines which fields should be selected in the response based on the query parameter.
+ * 
+ * @param {Object} req - Express request object containing query parameters.
+ * @returns {string} A string representing the selected fields.
+ *
+ * @note This function manages the level of detail in database queries.
+ * @todo Consider moving this function to a utility module.
+ */
+const getSelectedFieldsInResponse = (detailed) => {
+  const showFullDetails = String(detailed) === "true";
+  return showFullDetails ? ALL_FIELDS : SUMMARISED_FIELDS;
+}
+
+// Validates the satellite information before continuing the processing
+/**
+ * Validates the satellite information before continuing the processing
+ *
+ * @param {Object} data - The satellite data to validate.
+ * @param {string} data.name - The unique name of the satellite.
+ * @param {string} data.slug - The unique slug (extended name) of the satellite.
+ * @param {string} [data.status] - The status of the satellite (e.g., "active", "inactive").
+ * @param {string} [data.company] - The company operating the satellite (optional).
+ * @param {string} [data.createdBy] - The user who created the satellite (optional).
+ * @param {string} [data.updatedBy] - The user who last updated the satellite (optional).
+ * @param {Object} data.orbit - The orbit information of the satellite.
+ * @param {number} data.orbit.longitude - The orbit longitude (positive East, negative West).
+ * @param {number} data.orbit.latitude - The orbit latitude (positive North, negative South).
+ * @param {number} data.orbit.inclination - The orbit inclination angle.
+ * @param {number} data.orbit.height - The orbit height in kilometers.
+ * 
+ * @throws {ValidationError} If any required field is missing or has an incorrect type.
+ * @throws {ValidationError} If orbital information is out of the valid range.
+ * 
+ * @returns {boolean} Returns `true` if validation is successful.
+ */
+const validateSatelliteInformation = (data) => {
+  
+  const { name, slug, status, company, createdBy, updatedBy, orbit } = data;
+  // Required fields validation:
+  if (!name || !slug || !orbit) {
+    throw new ValidationError("The fields 'name', 'slug' and 'orbit' are required.")
+  }
+
+  // Verify the types of the fields:
+  if (typeof name !== "string" || typeof slug !== "string" || typeof orbit !== "object" || orbit === null){
+    throw new ValidationError("The fields 'name', 'slug' or 'orbit' do not present the correct type.")
+  }
+
+  // Mongoose already verifies that the 'status' in case of provided is within the expected constraints.
+  
+  // Verify the consistency of the orbit information:
+  if (orbit.latitude < -90 || orbit.latitude > 90 || orbit.longitude < -180 || orbit.longitude > 180 || orbit.height <= 0){
+    throw new ValidationError("Orbital information out of range.")
+  }
+  // TODO: verify consistency of 'company' field.
+  return true;
+}
+
+// Retrieves satellite data based on a given filter
+/**
+ * Retrieves satellite data based on a given filter.
+ * 
+ * @async
+ * @function getSatelliteByFilter
+ * @param {Object} filter - The filter criteria for retrieving the satellite.
+ * @param {Object} detailed - Additional query parameters to modify the response.
+ * @returns {Promise<{status: number, data: Object}>} 
+ *   A promise resolving to an object with:
+ *   - `status` (number): HTTP-like status code (200, 404, or 500).
+ *   - `data` (Object): Satellite data or an error message.
+ * 
+ * @example
+ * const filter = { name: "Hubble" };
+ * const detailed = { details: true };
+ * const result = await getSatelliteByFilter(filter, detailed);
+ * console.log(result.status, result.data);
+ */
+const getSatelliteByFilter = async (filter, detailed) => {
+  try {
+    const satellite = await findSatellite(filter, detailed);
+    if (!satellite) {
+      // Returns an structure translatable then as the 'res'.  
+      return {status: 404, data: {message: "Satellite not found" }};
+    }
+
+    return {status: 200, data: satellite};
+  } catch(error){
+    console.error(error);
+    return {status: 500, data: {message: `An error occurred. Details: ${error.message}` }};
+  }   
+}
+
+// Retrieves a satellite from database based on the provided filter
+/**
+ * Retrieves a satellite from the database based on the provided filter.
+ *
+ * @async
+ * @param {Object} filter - Query filter to find the satellite in the database.
+ * @param {Object} detailed - Boolean flag to determine the fields to retrieve.
+ * @returns {Promise<Object|null>} Returns the satellite object if found, otherwise null.
+ */
+const findSatellite = async (filter, detailed) => {
+  try {
+    const selectedFields = getSelectedFieldsInResponse(detailed); 
+    return await Satellite.findOne(filter).select(selectedFields);  
+  } catch (error) {
+    console.error(error);
+    throw new Error(`An error has occurred while requesting the satellite from databas. Details: ${error.message}`);
+  }
+};
+
+
+// 
