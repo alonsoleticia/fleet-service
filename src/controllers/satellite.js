@@ -324,48 +324,101 @@ exports.getSatelliteByName = async (req, res) => {
  *                 error: "An unexpected error occurred while updating the satellite."
  */
 exports.updateSatelliteById = async (req, res) => {
-  try {
-
     // Getting satellite under analysis with old information:
     const filter = { _id: req.params.id };
     const detailed = "true";
-    const getSatelliteResponse = await getSatelliteByFilter(filter, detailed)
-    if (getSatelliteResponse.status != 200){
-      return res.status(getSatelliteResponse.status).json({ message: getSatelliteResponse.data });
-    }
-
-    const oldSatelliteInfo = getSatelliteResponse.data;
-    const oldSatelliteData = oldSatelliteInfo ? oldSatelliteInfo.toObject() : null;     // Use toObject() to convert the Mongoose doc to a normal Object
-
-    // Validate feasibility of the updated information for the satellite:
-    // Any error will be captured in the catch with a ValidationError personalized exception:
     const updatedSatelliteInputData = req.body;
-    validateSatelliteInformation(updatedSatelliteInputData);
-   
-    if (updatedSatelliteInputData._id !== undefined && updatedSatelliteInputData._id !== oldSatelliteData._id){
-      return res.status(409).json({ message: 'Satellite internal ID cannot be modified. It is immutable.' });
-    }
 
-    if (updatedSatelliteInputData.name !== oldSatelliteData.name || updatedSatelliteInputData.slug !== oldSatelliteData.slug) {
-      return res.status(409).json({ message: 'Satellite name or slug cannot be modified. They are immutable.' });
-    }
-
-    const satellite = await Satellite.findOneAndUpdate(filter, updatedSatelliteInputData, { returnDocument: "after" }  ); // Returns updated document  
-    res.status(200).json(satellite);  
-    
-  } catch (error) {
-    console.error(error)
-    if (error instanceof ValidationError){
-      return res.status(400).json({ error: error.message });
-    }else{
-      return res.status(500).json({ error: error.message });       
-    }
-  }
+    const result = await updateSatelliteByFilter(filter, detailed, updatedSatelliteInputData);
+    return res.status(result.status).json(result.data);
 };
 
 // Update satellite by name
+/**
+ * @swagger
+ * /api/satellites/name/{name}:
+ *   put:
+ *     summary: Update a satellite by its name
+ *     tags: [Satellites]
+ *     description: Updates an existing satellite's information, except for its name or slug.
+ *     parameters:
+ *       - in: path
+ *         name: name
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the satellite to update.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Satellite'
+ *     responses:
+ *       200:
+ *         description: Satellite updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Satellite'
+ *       400:
+ *         description: Validation error in the provided data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error details
+ *               example:
+ *                 error: "The fields 'name', 'slug' and 'orbit' are required."
+ *       404:
+ *         description: Satellite not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error details
+ *               example:
+ *                 message: "Satellite not found"
+ *       409:
+ *         description: Conflict - Name or slug cannot be updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error details
+ *               example:
+ *                 message: "Satellite name or slug cannot be updated."
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error details
+ *               example:
+ *                 error: "An unexpected error occurred while updating the satellite."
+ */
+exports.updateSatelliteByName = async (req, res) => {
+    // Getting satellite under analysis with old information:
+    const filter = { name: req.params.name };
+    const detailed = "true";
+    const updatedSatelliteInputData = req.body;
 
-
+    const result = await updateSatelliteByFilter(filter, detailed, updatedSatelliteInputData);
+    return res.status(result.status).json(result.data);
+}
 
 // Delete satellite by ID (soft delete)
 /**
@@ -421,7 +474,6 @@ exports.deleteSatellite = async (req, res) => {
     res.status(500).json({ error: `An error occurred. Details: ${error.message}` });
   }
 };
-
 
 
 // Determines which fields should be selected in the response based on the query parameter
@@ -518,9 +570,9 @@ const getSatelliteByFilter = async (filter, detailed) => {
   }   
 }
 
-// Retrieves a satellite from database based on the provided filter
+// Finds a satellite in database based on the provided filter and returns the document
 /**
- * Retrieves a satellite from the database based on the provided filter.
+ * Finds a satellite in database based on the provided filter and returns the document.
  *
  * @async
  * @param {Object} filter - Query filter to find the satellite in the database.
@@ -533,9 +585,88 @@ const findSatellite = async (filter, detailed) => {
     return await Satellite.findOne(filter).select(selectedFields);  
   } catch (error) {
     console.error(error);
-    throw new Error(`An error has occurred while requesting the satellite from databas. Details: ${error.message}`);
+    throw new Error(`An error has occurred while requesting the satellite from database. Details: ${error.message}`);
   }
 };
 
 
-// 
+// Updates and retrieves a satellite's data based on a given filter
+/**
+ * Updates and retrieves a satellite's data based on a given filter.
+ *
+ * @async
+ * @param {Object} filter - The filter criteria to find the satellite (e.g., `{ _id: "123" }` or `{ name: "Hubble" }`).
+ * @param {Object} detailed - Query parameters to determine the level of detail in the response.
+ * @param {Object} updatedSatelliteInputData - The new satellite data to be updated.
+ * @returns {Promise<{status: number, data: Object}>} - An object containing the HTTP status and the updated satellite data.
+ *
+ * @throws {Error} If an unexpected error occurs during the update process.
+ *
+ * @example
+ * const filter = { _id: "65a123456789abcd12345678" };
+ * const detailed = { details: "true" };
+ * const updatedData = { company: "GMV" };
+ * const result = await updateSatelliteByFilter(filter, detailed, updatedData);
+ * console.log(result);
+ * // { status: 200, data: { _id: "65a123456789abcd12345678", name: "Hubble", company: "GMV" } }
+ */
+const updateSatelliteByFilter = async (filter, detailed, updatedSatelliteInputData) => {
+  try {
+
+    // Get satellite to be updated:
+    const getSatelliteResponse = await getSatelliteByFilter(filter, detailed)
+    if (getSatelliteResponse.status != 200){
+      return {status: getSatelliteResponse.status, data: {message: getSatelliteResponse.data }};
+    }
+
+    const oldSatelliteInfo = getSatelliteResponse.data;
+    const oldSatelliteData = oldSatelliteInfo ? oldSatelliteInfo.toObject() : null;     // Use toObject() to convert the Mongoose doc to a normal Object
+
+    // Validate feasibility of the updated information for the satellite:
+    // Any error will be captured in the catch with a ValidationError personalized exception:
+    validateSatelliteInformation(updatedSatelliteInputData);
+   
+    if (updatedSatelliteInputData._id !== undefined && updatedSatelliteInputData._id !== oldSatelliteData._id){
+      return {status: 409, data:  { message: 'Satellite internal ID cannot be modified. It is immutable.' }};
+    }
+
+    if (updatedSatelliteInputData.name !== oldSatelliteData.name || updatedSatelliteInputData.slug !== oldSatelliteData.slug) {
+      return {status: 409, data:  { message: 'Satellite name or slug cannot be modified. They are immutable.' }};
+    }
+
+    const satellite = await findAndUpdateSatellite(filter, updatedSatelliteInputData);
+
+    return {status: 200, data: satellite};
+    
+  }catch(error){
+    console.error(error);
+    return {status: 500, data: {message: `An error occurred. Details: ${error.message}` }};
+  }
+}
+
+// Updates a satellite in the database based on the provided filter and returns the updated document
+/**
+ * Updates a satellite in the database based on the provided filter and returns the updated document.
+ *
+ * @async
+ * @param {Object} filter - The criteria to find the satellite (e.g., `{ _id: "123" }` or `{ name: "Hubble" }`).
+ * @param {Object} updatedSatelliteInputData - The new satellite data to apply in the update.
+ * @returns {Promise<Object|null>} - The updated satellite document, or `null` if no matching satellite was found.
+ *
+ * @throws {Error} If an unexpected error occurs while updating the satellite in the database.
+ *
+ * @example
+ * const filter = { _id: "65a123456789abcd12345678" };
+ * const updatedData = { company: "GMV" };
+ * const updatedSatellite = await findAndUpdateSatellite(filter, updatedData);
+ * console.log(updatedSatellite);
+ * // { _id: "65a123456789abcd12345678", name: "Hubble", company: "GMV" }
+ */
+const findAndUpdateSatellite = async (filter, updatedSatelliteInputData) => {
+  try {
+    return await Satellite.findOneAndUpdate(filter, updatedSatelliteInputData, { returnDocument: "after", runValidators: true } );  // Returns updated document and activates the schema validation
+  } catch (error) {
+    console.error(error);
+    throw new Error(`An error has occurred while updating the satellite in database. Details: ${error.message}`);
+  }
+};
