@@ -23,7 +23,7 @@ const SUMMARISED_FIELDS = Object.keys(SatelliteSummarised.schema.paths).join(' '
  *           content:
  *             application/json:
  *               schema:
- *                 $ref: '#/components/schemas/SatelliteSummarised'
+ *                 $ref: '#/components/schemas/Satellite'
  *         400:
  *           description: Bad request
  *           content:
@@ -65,7 +65,8 @@ exports.createSatellite = async (req, res) => {
     // If there is an error thrown from this method, it will be captured in the catch with a ValidationError personalized exception:
     validateSatelliteInformation(newSatelliteInputData);
 
-    const { name, slug, status, company, createdBy, updatedBy, orbit } = req.body;
+    // The content of req.body will overwrite the default values if needed:
+    const { name, slug, status = 'active', company = null, createdBy, updatedBy, orbit } = req.body;
 
     // Check if another element with the same 'name' or 'slug' already exists in the database:
     const existingSatellite = await Satellite.findOne({ $or: [{ name }, { slug }] });
@@ -77,25 +78,22 @@ exports.createSatellite = async (req, res) => {
     const satellite = new Satellite({
       name,
       slug,
-      status: status || 'active',
-      company: company || null,
+      status,
+      company,
       createdBy,
       updatedBy,
       orbit
     });
 
-    // Save the new element in database:
-    const savedSatellite = await satellite.save();
-
-    // Select the required information to return:
-    const satelliteReqData = await Satellite.findById(savedSatellite._id).select(SUMMARISED_FIELDS);
+    // Save the new element in database activating the Mongoose validators
+    const savedSatellite = await satellite.save({ runValidators: true });
 
     // Return the required information:
-    return res.status(201).json(satelliteReqData);
+    return res.status(201).json(savedSatellite);
 
   } catch (error) {
       if (error instanceof ValidationError){
-        return res.status(400).json({ error: error.message });
+        return res.status(400).json({ error: `The introduced values for the satellite are not correct. Details: ${error.message}` });
       }else{
         return res.status(500).json({ error: `An error has occurred while saving the satellite in database. Details: ${error}` });
       }
@@ -588,7 +586,6 @@ const findSatellite = async (filter, detailed) => {
     throw new Error(`An error has occurred while requesting the satellite from database. Details: ${error.message}`);
   }
 };
-
 
 // Updates and retrieves a satellite's data based on a given filter
 /**
