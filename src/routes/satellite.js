@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const satelliteController = require('../controllers/satellite');
-console.log(satelliteController);  // Esto debería mostrar el objeto con las funciones exportadas.
+// console.log(satelliteController);  // Shows the object with the exported functions.
 
 // Routes to handle satellites
 router.post('/', satelliteController.createSatellite);  // Create a new satellite

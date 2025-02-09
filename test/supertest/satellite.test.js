@@ -1,6 +1,6 @@
 const request = require("supertest");
 const app = require("../../src/app"); // Importing Express app
-const app = require("../../src/models/Satellite");
+const { Satellite } = require('../../src/models/satellite');
 
 describe("Satellites CRUD", () => {
   it("✅ It should create a new satellite", async () => {
