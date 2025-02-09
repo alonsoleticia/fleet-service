@@ -26,6 +26,11 @@ beforeAll(async () => {
   });
 
   console.log(`🔗 Connected to in-memory MongoDB at: ${mongoUri}`);
+
+  // Ensure the database is clean before any test runs
+  await mongoose.connection.dropDatabase();
+  console.log("✅ Database dropped before tests.");
+
 });
 
 afterAll(async () => {
