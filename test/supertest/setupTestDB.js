@@ -5,6 +5,7 @@
  * In this file, it is defined everything which has to do with beforeAll, afterEach, etc, regarding the behaviour of the DB. For example, it can be defined to clean-up the DB before each individual test, or clean-up the DB just at the beginning.
  */
 
+require('dotenv').config({ path: '.env.test' });  
 const mongoose = require("mongoose");
 const { MongoMemoryServer } = require("mongodb-memory-server");
 
