@@ -1,16 +1,22 @@
 /**
- * This is exclusively used for Jest/supertest, which is intended to use a MongoDB in memory, avoiding using the real Mongo instance.
- * 
- * Before all the tests, it initialized MongoDB in memory and connects Mongoose.
- * In this file, it is defined everything which has to do with beforeAll, afterEach, etc, regarding the behaviour of the DB. For example, it can be defined to clean-up the DB before each individual test, or clean-up the DB just at the beginning.
+ * 📌 This setup file is exclusively used for Jest & Supertest.
+ * It runs a MongoDB instance in memory, preventing any interaction with the real database.
+ *
+ * 🛠️ How it works:
+ * - Before all tests: Initializes an in-memory MongoDB instance and connects Mongoose.
+ * - After each test: Cleans up collections to ensure data isolation.
+ * - After all tests: Closes the database connection and stops the in-memory server.
  */
 
 const mongoose = require("mongoose");
 const { MongoMemoryServer } = require("mongodb-memory-server");
 
+console.log("🔧 setupTestDB.js has been successfully injected!");
+
 let mongoServer;
 
 beforeAll(async () => {
+  console.log("🚀 Starting MongoMemoryServer...");
   mongoServer = await MongoMemoryServer.create();
   const mongoUri = mongoServer.getUri();
 
@@ -18,17 +24,23 @@ beforeAll(async () => {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
+
+  console.log(`🔗 Connected to in-memory MongoDB at: ${mongoUri}`);
 });
 
 afterAll(async () => {
-  await mongoose.connection.dropDatabase();
-  await mongoose.connection.close();
-  await mongoServer.stop();
+  console.log("🛑 Stopping MongoMemoryServer...");
+  await mongoose.connection.dropDatabase(); // Clean up database
+  await mongoose.connection.close(); // Close connection
+  await mongoServer.stop(); // Stop in-memory server
+  console.log("✅ MongoMemoryServer stopped.");
 });
 
 afterEach(async () => {
+  console.log("🧹 Cleaning up database collections...");
   const collections = await mongoose.connection.db.collections();
   for (let collection of collections) {
     await collection.deleteMany({});
   }
+  console.log("✅ Collections cleared.");
 });
