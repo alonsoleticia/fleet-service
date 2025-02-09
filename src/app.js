@@ -1,10 +1,10 @@
 /* 
 Runs the application without listen() function, avoiding running the real server. This is exclusively used by Jest to execute the tests. 
+This file does not contain the real connection with Mongo, since for Jest, it is used the Mongo in memory (see /config/jest.config.js)
 */
 
 
 const express = require('express');
-const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const satelliteRoutes = require('./routes/satellite');
 const { swaggerUi, swaggerSpec } = require("./config/swagger.config");
@@ -16,11 +16,6 @@ const app = express();
 
 // Middleware to parse JSON
 app.use(express.json());
-
-// MongoDB connection
-mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('Error connecting to MongoDB:', err));
 
 // Routes
 app.use('/api/satellites', satelliteRoutes);
