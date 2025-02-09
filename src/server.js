@@ -4,15 +4,15 @@ const dotenv = require('dotenv');
 const satelliteRoutes = require('./routes/satellite');
 const { swaggerUi, swaggerSpec } = require("./config/swagger.config");
 
-// Load environment variables
-dotenv.config(); 
+// Load environment variables (not need to specify the .env since it is taken by default)
+dotenv.config();  
 
 const app = express();
 
 // Middleware to parse JSON
 app.use(express.json());
 
-// MongoDB connection
+// MongoDB connection (real connection)
 mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('Error connecting to MongoDB:', err));
