@@ -21,7 +21,6 @@ beforeAll(async () => {
     mongoServer = await MongoMemoryServer.create();
     const mongoUri = mongoServer.getUri();
 
-    // await mongoose.disconnect(); // Force disconnect before connecting
     await mongoose.connect(mongoUri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
@@ -46,6 +45,9 @@ afterAll(async () => {
   console.log("✅ MongoMemoryServer stopped.");
 });
 
+/*
+Tests will have dependencies, so it is needed to maintain the database collections between tests:
+
 afterEach(async () => {
   console.log("🧹 Cleaning up database collections...");
   const collections = await mongoose.connection.db.collections();
@@ -54,3 +56,4 @@ afterEach(async () => {
   }
   console.log("✅ Collections cleared.");
 });
+*/

@@ -125,7 +125,7 @@ const SatelliteSchema = new mongoose.Schema({
   orbit: OrbitSchema,
   deleted: { type: Boolean, default: false },
   deletedAt: { type: Date, default: null },
-  deletionOrigin: {type: String, enum: SATELLITE_DELETION_ORIGINS, default: SATELLITE_DELETION_ORIGINS[0] },
+  deletionOrigin: {type: String, enum: SATELLITE_DELETION_ORIGINS, default: null },
 }, {
   timestamps: true // Automatically adds 'createdAt' and 'updatedAt' fields
 });
