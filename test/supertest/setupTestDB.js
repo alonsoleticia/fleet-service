@@ -16,21 +16,26 @@ console.log("🔧 setupTestDB.js has been successfully injected!");
 let mongoServer;
 
 beforeAll(async () => {
-  console.log("🚀 Starting MongoMemoryServer...");
-  mongoServer = await MongoMemoryServer.create();
-  const mongoUri = mongoServer.getUri();
+  try{
+    console.log("🚀 Starting MongoMemoryServer...");
+    mongoServer = await MongoMemoryServer.create();
+    const mongoUri = mongoServer.getUri();
 
-  await mongoose.connect(mongoUri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
+    // await mongoose.disconnect(); // Force disconnect before connecting
+    await mongoose.connect(mongoUri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
 
-  console.log(`🔗 Connected to in-memory MongoDB at: ${mongoUri}`);
+    console.log(`🔗 Connected to in-memory MongoDB at: ${mongoUri}`);
 
-  // Ensure the database is clean before any test runs
-  await mongoose.connection.dropDatabase();
-  console.log("✅ Database dropped before tests.");
-
+    // Ensure the database is clean before any test runs
+    await mongoose.connection.dropDatabase();
+    console.log("✅ Database dropped before tests.");
+  }catch(error){
+    console.error('Error setting up Mongo in-memory server:', error);
+    throw error;
+  }
 });
 
 afterAll(async () => {

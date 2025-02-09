@@ -13,12 +13,14 @@
       "runtimeArgs": ["--inspect"]
     },
     {
-      "name": "Debug Jest Tests",
       "type": "node",
       "request": "launch",
-      "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}/src/app.js",
-      "args": ["--runInBand"],
+      "name": "Debug Jest Tests",
+      "program": "${workspaceFolder}/node_modules/jest/bin/jest.js",
+      "args": [
+        "--runInBand",
+        "--config", "./config/jest.config.js"
+      ],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
     }
