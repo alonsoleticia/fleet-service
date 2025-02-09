@@ -7,7 +7,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const satelliteRoutes = require('./routes/satellite');
-const { swaggerUi, swaggerSpec } = require("./config/swaggerConfig");
+const { swaggerUi, swaggerSpec } = require("./config/swagger.config");
 
 // Load environment variables
 dotenv.config(); 
