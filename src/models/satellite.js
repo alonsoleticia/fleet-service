@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const SATELLITE_STATUSES = ['active', 'inactive'];
+const SATELLITE_CREATION_ORIGINS = ['inventory', 'manual'];
+const SATELLITE_DELETION_ORIGINS = ['inventory', 'manual'];
 
 /**
  * @swagger
@@ -59,6 +61,11 @@ const SATELLITE_STATUSES = ['active', 'inactive'];
  *           type: string
  *           description: Company operating the satellite.
  *           example: GMV
+ *         creationOrigin:
+ *           type: String
+ *           enum: ["inventory", "manual"]
+ *           description: Origin of the creation of the entity
+ *           default: "inventory" 
  *         createdBy:
  *           type: string
  *           description: User who created the satellite in the database.
@@ -75,6 +82,11 @@ const SATELLITE_STATUSES = ['active', 'inactive'];
  *           type: Date
  *           default: null
  *           description: Date in which the satellite was soft deleted if applies.
+ *         deletionOrigin:
+ *           type: String
+ *           enum: ["inventory", "manual"]
+ *           description: Origin of the soft deletion of the entity
+ *           default: "inventory" 
  * 
  *     SatelliteSummarised:
  *       type: object
@@ -107,12 +119,13 @@ const SatelliteSchema = new mongoose.Schema({
   slug: SlugSchema,
   status: { type: String, enum: SATELLITE_STATUSES, default: SATELLITE_STATUSES[0] },
   company: { type: String, default: null }, // FIXME: related to 'companies' model (or null)
+  creationOrigin: {type: String, enum: SATELLITE_CREATION_ORIGINS, default: SATELLITE_CREATION_ORIGINS[0] },
   createdBy: { type: String }, // FIXME: related to 'users' model
   updatedBy: { type: String }, // FIXME: related to 'users' model
   orbit: OrbitSchema,
   deleted: { type: Boolean, default: false },
-  deletedAt: { type: Date, default: null }
-
+  deletedAt: { type: Date, default: null },
+  deletionOrigin: {type: String, enum: SATELLITE_DELETION_ORIGINS, default: SATELLITE_DELETION_ORIGINS[0] },
 }, {
   timestamps: true // Automatically adds 'createdAt' and 'updatedAt' fields
 });
