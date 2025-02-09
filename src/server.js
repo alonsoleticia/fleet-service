@@ -1,8 +1,3 @@
-/* 
-Runs the application without listen() function, avoiding running the real server. This is exclusively used by Jest to execute the tests. 
-*/
-
-
 const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
@@ -33,3 +28,9 @@ app.get('/', (req, res) => {
 // Route for Swagger:
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 console.log('Swagger documentation available at /api-docs');
+
+// Server initialization:
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});
