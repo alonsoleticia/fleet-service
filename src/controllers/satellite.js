@@ -3,6 +3,10 @@ const ValidationError = require("../utils/ValidationError");
 const ALL_FIELDS = ''
 const SUMMARISED_FIELDS = Object.keys(SatelliteSummarised.schema.paths).join(' ');
 
+/**************************************************************
+ * CRUD satellite operations endpoints:
+ **************************************************************/
+
 // Create a new satellite
 /**
  * @swagger
@@ -69,8 +73,11 @@ exports.createSatellite = async (req, res) => {
     const { name, slug, status = 'active', company = null, createdBy, updatedBy, orbit } = req.body;
 
     // Check if another element with the same 'name' or 'slug' already exists in the database:
-    const existingSatellite = await Satellite.findOne({ $or: [{ name }, { slug }] });
-    if (existingSatellite) {
+    const filter = { $or: [{ name }, { slug }] };
+    const detailed = false;
+    const getSatelliteResponse = await getSatelliteByFilter(filter, detailed);
+    
+    if (getSatelliteResponse.status == 200){
       return res.status(409).json({ error: "The provided satellite 'name' or 'slug' already exists in database." });
     }
 
@@ -136,13 +143,11 @@ exports.createSatellite = async (req, res) => {
 exports.getAllSatellites = async (req, res) => {
   try {
     const { detailed } = req.query;
-    const selectedFields = getSelectedFieldsInResponse(detailed);
-    const satellites = await Satellite.find().select(selectedFields);  
+    const satellites = await findSatellites({}, detailed);  
     res.status(200).json(satellites);  
-
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ error: `An error has occurred while retrieving satellites from database. Details: ${error}` });
+    return res.status(500).json({ error: `An error has occurred while retrieving satellites from database. Details: ${error.message}` });
   }
 };
 
@@ -242,79 +247,6 @@ exports.getSatelliteByName = async (req, res) => {
 
   const result = await getSatelliteByFilter(filter, detailed);
   return res.status(result.status).json(result.data);
-};
-
-// Get satellite ID by its name
-/** 
- * @swagger
- * /api/satellites/name/{name}/id:
- *   get:
- *     summary: Get satellite ID by its name
- *     tags:
- *       - Satellites
- *     description: |
- *       Retrieves the unique identifier (`_id`) of a satellite based on its `name`.
- *       This can be useful for clients to get the satellite's ID for further operations.
- *     parameters:
- *       - in: path
- *         name: name
- *         required: true
- *         schema:
- *           type: string
- *         description: "The name of the satellite to retrieve the ID for."
- *     responses:
- *       200:
- *         description: Satellite ID found successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: string
- *                   description: "The unique MongoDB `_id` of the satellite."
- *                   example: "603c9f76f1a2b8b56a547b42"
- *       404:
- *         description: Satellite not found with the provided name
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   description: "Error message describing that no satellite was found."
- *                   example: "Satellite not found with the provided name."
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   description: "Error message detailing the internal server error."
- *                   example: "An error occurred while retrieving the satellite ID. Details: error message here."
- */
-exports.getSatelliteIdByName = async (req, res) => {
-  try {
-    const { name } = req.params;  // Get the name from the URL parameters
-
-    // Search for the satellite by name
-    const satellite = await Satellite.findOne({ name });
-
-    if (!satellite) {
-      return res.status(404).json({ error: "Satellite not found with the provided name." });
-    }
-
-    // Return the satellite's ID
-    return res.status(200).json({ id: satellite._id });
-
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: `An error occurred while retrieving the satellite ID. Details: ${error.message}` });
-  }
 };
 
 // Update satellite by ID 
@@ -526,14 +458,14 @@ exports.updateSatelliteByName = async (req, res) => {
  */
 exports.deleteSatellite = async (req, res) => {
   try {
-    const satellite = await Satellite.findByIdAndUpdate(
-      req.params.id,
-      { 
-        deleted: true,  
-        deletedAt: new Date()
-      },
-      { new: true }  // Returns the updated object
-    );
+
+    const { filter } = req.params.id;
+    const updatedSatelliteInputData ={ 
+      deleted: true,  
+      deletedAt: new Date()
+    };
+
+    const satellite = await findAndUpdateSatellite(filter, updatedSatelliteInputData);
 
     if (!satellite) {
       return res.status(404).json({ message: 'Satellite not found' });
@@ -546,6 +478,90 @@ exports.deleteSatellite = async (req, res) => {
   }
 };
 
+/**************************************************************
+ * Auxiliary endpoints:
+ **************************************************************/
+
+// Get satellite ID by its name
+/** 
+ * @swagger
+ * /api/satellites/name/{name}/id:
+ *   get:
+ *     summary: Get satellite ID by its name
+ *     tags:
+ *       - Satellites
+ *     description: |
+ *       Retrieves the unique identifier (`_id`) of a satellite based on its `name`.
+ *       This can be useful for clients to get the satellite's ID for further operations.
+ *     parameters:
+ *       - in: path
+ *         name: name
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "The name of the satellite to retrieve the ID for."
+ *     responses:
+ *       200:
+ *         description: Satellite ID found successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   description: "The unique MongoDB `_id` of the satellite."
+ *                   example: "603c9f76f1a2b8b56a547b42"
+ *       404:
+ *         description: Satellite not found with the provided name
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: "Error message describing that no satellite was found."
+ *                   example: "Satellite not found with the provided name."
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: "Error message detailing the internal server error."
+ *                   example: "An error occurred while retrieving the satellite ID. Details: error message here."
+ */
+exports.getSatelliteIdByName = async (req, res) => {
+  try {
+    const { name } = req.params;  // Get the name from the URL parameters
+
+    // FIXME -> usar el await getSatelliteByFilter(filter, detailed);
+
+
+    // Search for the satellite by name
+    const satellite = await Satellite.findOne({ name });
+
+    if (!satellite) {
+      return res.status(404).json({ error: "Satellite not found with the provided name." });
+    }
+
+    // Return the satellite's ID
+    return res.status(200).json({ id: satellite._id });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: `An error occurred while retrieving the satellite ID. Details: ${error.message}` });
+  }
+};
+
+
+/**************************************************************
+ * Auxiliary reusable methods for different purposes:
+ **************************************************************/
 
 // Determines which fields should be selected in the response based on the query parameter
 /**
@@ -641,6 +657,10 @@ const getSatelliteByFilter = async (filter, detailed) => {
   }   
 }
 
+/**************************************************************
+ * Auxiliary reusable methods to manage database operations:
+ **************************************************************/
+
 // Finds a satellite in database based on the provided filter and returns the document
 /**
  * Finds a satellite in database based on the provided filter and returns the document.
@@ -657,6 +677,25 @@ const findSatellite = async (filter, detailed) => {
   } catch (error) {
     console.error(error);
     throw new Error(`An error has occurred while requesting the satellite from database. Details: ${error.message}`);
+  }
+};
+
+// Finds multiple satellites in the database based on the provided filter and returns the documents
+/**
+ * Finds multiple satellites in the database based on the provided filter and returns the documents.
+ *
+ * @async
+ * @param {Object} filter - Query filter to find the satellites in the database.
+ * @param {Object} detailed - Boolean flag to determine the fields to retrieve.
+ * @returns {Promise<Array>} Returns an array of satellite objects.
+ */
+const findSatellites = async (filter, detailed) => {
+  try {
+    const selectedFields = getSelectedFieldsInResponse(detailed);
+    return await Satellite.find(filter).select(selectedFields);
+  } catch (error) {
+    console.error(error);
+    throw new Error(`An error has occurred while requesting satellites from database. Details: ${error.message}`);
   }
 };
 

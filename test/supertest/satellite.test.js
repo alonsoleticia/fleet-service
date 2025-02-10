@@ -42,6 +42,9 @@ describe("Satellites CRUD", () => {
 
         // If the response contains date fields, or dynamic UUIDs, they are ignored in these tests
 
+
+        // FIXME: mirar el número de campos que devuelve por si cambia la respuesta
+
         // Verify that non-date fields match the expected values
         //expect(res.body._id).toBe(expectedResponse._id);
         expect(res.body.name).toBe(expectedResponse.name);
