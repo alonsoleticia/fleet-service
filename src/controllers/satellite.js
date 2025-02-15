@@ -1,7 +1,10 @@
-const { Satellite, SatelliteSummarised } = require('../models/satellite');
 const ValidationError = require("../utils/ValidationError");
-const ALL_FIELDS = ''
+const { Satellite, SatelliteSummarised } = require('../models/satellite');
 const SUMMARISED_FIELDS = Object.keys(SatelliteSummarised.schema.paths).join(' ');
+const { 
+  ALL_FIELDS,
+  SATELLITE_DELETION_ORIGINS 
+} = require('../utils/enums');
 
 /**************************************************************
  * CRUD satellite operations endpoints:
@@ -450,7 +453,7 @@ exports.updateSatelliteByName = async (req, res) => {
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Satellite marked as deleted"
+ *                   example: "Satellite has been soft deleted"
  *       404:
  *         description: Satellite not found
  *       500:
@@ -462,6 +465,7 @@ exports.deleteSatellite = async (req, res) => {
     const { filter } = req.params.id;
     const updatedSatelliteInputData ={ 
       deleted: true,  
+      deletionOrigin: SATELLITE_DELETION_ORIGINS[0], // For the moment, a single origin is supported
       deletedAt: new Date()
     };
 
