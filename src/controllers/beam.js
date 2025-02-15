@@ -140,8 +140,83 @@ exports.getBeamById = async (req, res) => {
   
     const result = await getBeamByFilter(filter, detailed);
     return res.status(result.status).json(result.data);
-  };
+};
 
+
+// Update beam by ID 
+/**
+ * @swagger
+ * /api/beams/id/{id}:
+ *   put:
+ *     summary: Update a beam by its ID
+ *     tags: [Beams]
+ *     description: Updates an existing beam's information.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The unique identifier of the beam to update.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Beam'
+ *     responses:
+ *       200:
+ *         description: Beam updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Beam'
+ *       400:
+ *         description: Validation error in the provided data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error details
+ *               example:
+ *                 error: "The fields 'name' and 'linkDirection' are required."
+ *       404:
+ *         description: Beam not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error details
+ *               example:
+ *                 message: "Beam not found"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error details
+ *               example:
+ *                 error: "An unexpected error occurred while updating the beam."
+ */
+exports.updateBeamById = async (req, res) => {
+    // Getting beam under analysis with old information:
+    const filter = { _id: req.params.id };
+    const detailed = "true";
+    const updatedBeamInputData = req.body;
+
+    const result = await updateBeamByFilter(filter, detailed, updatedBeamInputData);
+    return res.status(result.status).json(result.data);
+};
 
 
 /**************************************************************
@@ -247,5 +322,85 @@ const findBeam = async (filter, detailed) => {
       console.error(error);
       throw new Error(`An error has occurred while requesting the beam from database. Details: ${error.message}`);
     }
-  };
+};
   
+// Updates and retrieves a beam's data based on a given filter
+/**
+ * Updates and retrieves a beam's data based on a given filter.
+ *
+ * @async
+ * @param {Object} filter - The filter criteria to find the beam (e.g., `{ _id: "123" }`).
+ * @param {Object} detailed - Query parameters to determine the level of detail in the response.
+ * @param {Object} updatedBeamInputData - The new beam data to be updated.
+ * @returns {Promise<{status: number, data: Object}>} - An object containing the HTTP status and the updated beam data.
+ *
+ * @throws {Error} If an unexpected error occurs during the update process.
+ *
+ * @example
+ * const filter = { _id: "65a123456789abcd12345678" };
+ * const detailed = { details: "true" };
+ * const updatedData = { name: "Beam3" };
+ * const result = await updateBeamByFilter(filter, detailed, updatedData);
+ * console.log(result);
+ * // { status: 200, data: { _id: "65a123456789abcd12345678", name: "Beam3", linkDirection: "uplink" } }
+ */
+const updateBeamByFilter = async (filter, detailed, updatedBeamInputData) => {
+    try {
+  
+      // Get beam to be updated:
+      const getBeamResponse = await getBeamByFilter(filter, detailed)
+      if (getBeamResponse.status != 200){
+        return {status: getBeamResponse.status, data: {message: getBeamResponse.data }};
+      }
+  
+      const oldBeamInfo = getBeamResponse.data;
+      const oldBeamData = oldBeamInfo ? oldBeamInfo.toObject() : null;     // Use toObject() to convert the Mongoose doc to a normal Object
+  
+      // Validate feasibility of the updated information for the beam:
+      // Any error will be captured in the catch with a ValidationError personalized exception:
+      validateBeamInformation(updatedBeamInputData);
+     
+      if (updatedBeamInputData._id !== undefined && updatedBeamInputData._id !== oldBeamData._id){
+        return {status: 409, data:  { message: 'Beam internal ID cannot be modified. It is immutable.' }};
+      }
+  
+      if (updatedBeamInputData.linkDirection !== oldBeamData.linkDirection) {
+        return {status: 409, data:  { message: 'Beam link direction cannot be modified. It is immutable.' }};
+      }
+  
+      const beam = await findAndUpdateBeam(filter, updatedBeamInputData);
+  
+      return {status: 200, data: beam};
+      
+    }catch(error){
+      console.error(error);
+      return {status: 500, data: {message: `An error occurred. Details: ${error.message}` }};
+    }
+}
+
+// Updates a beam in the database based on the provided filter and returns the updated document
+/**
+ * Updates a beam in the database based on the provided filter and returns the updated document.
+ *
+ * @async
+ * @param {Object} filter - The criteria to find the beam (e.g., `{ _id: "123" }`).
+ * @param {Object} updatedBeamInputData - The new beam data to apply in the update.
+ * @returns {Promise<Object|null>} - The updated beam document, or `null` if no matching beam was found.
+ *
+ * @throws {Error} If an unexpected error occurs while updating the beam in the database.
+ *
+ * @example
+ * const filter = { _id: "65a123456789abcd12345678" };
+ * const updatedData = { name: "Beam 5" };
+ * const updatedBeam = await findAndUpdateBeam(filter, updatedData);
+ * console.log(updatedSatellite);
+ * // { _id: "65a123456789abcd12345678", name: "Beam 5", linkDirection: "uplink" }
+ */
+const findAndUpdateBeam = async (filter, updatedBeamInputData) => {
+    try {
+      return await Beam.findOneAndUpdate(filter, updatedBeamInputData, { returnDocument: "after", runValidators: true } );  // Returns updated document and activates the schema validation
+    } catch (error) {
+      console.error(error);
+      throw new Error(`An error has occurred while updating the beam in database. Details: ${error.message}`);
+    }
+  };
