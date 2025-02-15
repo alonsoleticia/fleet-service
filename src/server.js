@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const satelliteRoutes = require('./routes/satellite');
+const beamRoutes = require('./routes/beam');
 const { swaggerUi, swaggerSpec } = require("./config/swagger.config");
 
 // Load environment variables (not need to specify the .env since it is taken by default)
@@ -19,8 +20,9 @@ mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTop
 
 // Routes
 app.use('/api/satellites', satelliteRoutes);
+app.use('/api/beams', beamRoutes);
 
-// Adding this route to display something in the browser when accessing "/" before reaching /satellites
+// Adding this route to display something in the browser when accessing "/":
 app.get('/', (req, res) => {
   res.send('Welcome to the Fleet Service API');
 });
