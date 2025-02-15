@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const SATELLITE_STATUSES = ['active', 'inactive'];
 const SATELLITE_CREATION_ORIGINS = ['inventory', 'manual'];
-const SATELLITE_DELETION_ORIGINS = ['inventory', 'manual'];
+const SATELLITE_DELETION_ORIGINS = ['manual'];
 
 /**
  * @swagger
@@ -84,9 +84,9 @@ const SATELLITE_DELETION_ORIGINS = ['inventory', 'manual'];
  *           description: Date in which the satellite was soft deleted if applies.
  *         deletionOrigin:
  *           type: String
- *           enum: ["inventory", "manual"]
+ *           enum: ["manual"]
  *           description: Origin of the soft deletion of the entity
- *           default: "inventory" 
+ *           default: "manual" 
  * 
  *     SatelliteSummarised:
  *       type: object
