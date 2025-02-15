@@ -7,7 +7,7 @@ const beamController = require('../controllers/beam');
 router.post('/', beamController.createBeam);  // Create a new beam
 router.get('/id/:id', beamController.getBeamById);  // Get a beam by ID
 router.put('/id/:id', beamController.updateBeamById);  // Update a beam by ID
-// router.delete('/id/:id', beamController.deleteBeam);  // Delete a beam by ID
+router.delete('/id/:id', beamController.deleteBeam);  // Delete a beam by ID
 
 module.exports = router;  // Export the router to be used in other parts of the application
 

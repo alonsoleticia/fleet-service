@@ -90,9 +90,6 @@ exports.createBeam = async (req, res) => {
     }
   };
 
-
-
-
 // Get beam by ID (with/without details)
 /**
  * @swagger
@@ -141,7 +138,6 @@ exports.getBeamById = async (req, res) => {
     const result = await getBeamByFilter(filter, detailed);
     return res.status(result.status).json(result.data);
 };
-
 
 // Update beam by ID 
 /**
@@ -218,12 +214,66 @@ exports.updateBeamById = async (req, res) => {
     return res.status(result.status).json(result.data);
 };
 
+// Delete beam by ID (soft delete)
+/**
+ * @swagger
+ * /api/beams/id/{id}:
+ *   delete:
+ *     summary: Soft delete a beam
+ *     tags: [Beams]
+ *     description: |
+ *       Marks the beam as deleted without removing it from the database.
+ *       This is a soft delete operation.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Beam ID to mark as deleted
+ *     responses:
+ *       200:
+ *         description: Beam marked as deleted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Beam has been soft deleted"
+ *       404:
+ *         description: Beam not found
+ *       500:
+ *         description: Internal server error
+ */
+// FIXME: this endpoint may trigger other actions.
+exports.deleteBeam = async (req, res) => {
+    try {
+  
+      const { filter } = req.params.id;
+      const updatedBeamInputData ={ 
+        deleted: true,  
+        deletionOrigin: BEAM_DELETION_ORIGINS[0], // For the moment, a single origin is supported
+        deletedAt: new Date()
+      };
+  
+      const beam = await findAndUpdateBeam(filter, updatedBeamInputData);
+  
+      if (!beam) {
+        return res.status(404).json({ message: 'Beam not found' });
+      }
+  
+      res.status(200).json({ message: 'Beam has been soft deleted', beam });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: `An error occurred. Details: ${error.message}` });
+    }
+  };
 
 /**************************************************************
 * Auxiliary reusable methods for different purposes:
 **************************************************************/
-
-
 
 // Validates the beam information before continuing the processing
 /**
@@ -295,10 +345,7 @@ const getBeamByFilter = async (filter, detailed) => {
       console.error(error);
       return {status: 500, data: {message: `An error occurred. Details: ${error.message}` }};
     }   
-  }
-
-
-
+}
 
 
 /**************************************************************
