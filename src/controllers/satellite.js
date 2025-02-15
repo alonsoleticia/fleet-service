@@ -3,6 +3,7 @@ const { Satellite, SatelliteSummarised } = require('../models/satellite');
 const SUMMARISED_FIELDS = Object.keys(SatelliteSummarised.schema.paths).join(' ');
 const { 
   ALL_FIELDS,
+  SATELLITE_STATUSES,
   SATELLITE_DELETION_ORIGINS 
 } = require('../utils/enums');
 
@@ -68,12 +69,11 @@ const {
 exports.createSatellite = async (req, res) => {
   try {
 
-    const newSatelliteInputData = req.body;
-    // If there is an error thrown from this method, it will be captured in the catch with a ValidationError personalized exception:
-    validateSatelliteInformation(newSatelliteInputData);
+    // Extracting required data
+    const { name, slug, status = SATELLITE_STATUSES[0], company = null, createdBy, updatedBy, orbit } = req.body;
 
-    // The content of req.body will overwrite the default values if needed:
-    const { name, slug, status = 'active', company = null, createdBy, updatedBy, orbit } = req.body;
+    // Validate input data
+    validateSatelliteInformation(req.body);
 
     // Check if another element with the same 'name' or 'slug' already exists in the database:
     const filter = { $or: [{ name }, { slug }] };
