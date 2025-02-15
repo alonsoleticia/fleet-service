@@ -1,7 +1,10 @@
 const mongoose = require('mongoose');
-const SATELLITE_STATUSES = ['active', 'inactive'];
-const SATELLITE_CREATION_ORIGINS = ['inventory', 'manual'];
-const SATELLITE_DELETION_ORIGINS = ['manual'];
+
+const { 
+  SATELLITE_STATUSES, 
+  SATELLITE_CREATION_ORIGINS, 
+  SATELLITE_DELETION_ORIGINS 
+} = require('../utils/enums');
 
 /**
  * @swagger
@@ -86,7 +89,7 @@ const SATELLITE_DELETION_ORIGINS = ['manual'];
  *           type: String
  *           enum: ["manual"]
  *           description: Origin of the soft deletion of the entity
- *           default: "manual" 
+ *           default: null 
  * 
  *     SatelliteSummarised:
  *       type: object
