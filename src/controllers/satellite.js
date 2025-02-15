@@ -1,4 +1,5 @@
 const ValidationError = require("../utils/ValidationError");
+const { getSelectedFieldsInResponse } = require('../utils/utils');
 const { Satellite } = require('../models/satellite');
 
 const { 
@@ -121,7 +122,7 @@ exports.createSatellite = async (req, res) => {
  *     description: | 
  *       Returns a list of all satellites in the system.
  *       - If **detailed=true**, all fields are returned (see **Satellite** schema)
- *       - If **detailed is omitted or false**, a summarized version is returned (see **SatelliteSummarised** schema).
+ *       - If **detailed is omitted or false**, a summarized version is returned.
  *     parameters: 
  *     - in: query
  *       name: detailed
@@ -140,7 +141,7 @@ exports.createSatellite = async (req, res) => {
  *               items:
  *                 oneOf:
  *                   - $ref: '#/components/schemas/Satellite'
- *                   - $ref: '#/components/schemas/SatelliteSummarised'               
+ *                   - Main fields of the Satellite               
  *       500:
  *         description: Internal server error 
  */ 
@@ -165,7 +166,7 @@ exports.getAllSatellites = async (req, res) => {
  *     description: | 
  *       Returns the information corresponding to the requested satellite.
  *       - If **detailed=true**, all fields are returned (see **Satellite** schema)
- *       - If **detailed is omitted or false**, a summarized version is returned (see **SatelliteSummarised** schema).
+ *       - If **detailed is omitted or false**, a summarized version is returned.
  *     parameters: 
  *     - in: query
  *       name: detailed
@@ -190,7 +191,7 @@ exports.getAllSatellites = async (req, res) => {
  *               items:
  *                 oneOf:
  *                   - $ref: '#/components/schemas/Satellite'
- *                   - $ref: '#/components/schemas/SatelliteSummarised'   
+ *                   - Main fields of the Satellite   
  *       404:
  *         description: Satellite not found            
  *       500:
@@ -214,7 +215,7 @@ exports.getSatelliteById = async (req, res) => {
  *     description: | 
  *       Returns the information corresponding to the requested satellite.
  *       - If **detailed=true**, all fields are returned (see **Satellite** schema)
- *       - If **detailed is omitted or false**, a summarized version is returned (see **SatelliteSummarised** schema).
+ *       - If **detailed is omitted or false**, a summarized version is returned.
  *     parameters: 
  *     - in: query
  *       name: detailed
@@ -239,7 +240,7 @@ exports.getSatelliteById = async (req, res) => {
  *               items:
  *                 oneOf:
  *                   - $ref: '#/components/schemas/Satellite'
- *                   - $ref: '#/components/schemas/SatelliteSummarised'   
+ *                   - Main fields of the Satellite   
  *       404:
  *         description: Satellite not found            
  *       500:
@@ -568,21 +569,6 @@ exports.getSatelliteIdByName = async (req, res) => {
  * Auxiliary reusable methods for different purposes:
  **************************************************************/
 
-// Determines which fields should be selected in the response based on the query parameter
-/**
- * Determines which fields should be selected in the response based on the query parameter.
- * 
- * @param {Object} req - Express request object containing query parameters.
- * @returns {string} A string representing the selected fields.
- *
- * @note This function manages the level of detail in database queries.
- * @todo Consider moving this function to a utility module.
- */
-const getSelectedFieldsInResponse = (detailed) => {
-  const showFullDetails = String(detailed) === "true";
-  return showFullDetails ? ALL_FIELDS : SATELLITE_SUMMARISED_FIELDS;
-}
-
 // Validates the satellite information before continuing the processing
 /**
  * Validates the satellite information before continuing the processing
@@ -677,7 +663,7 @@ const getSatelliteByFilter = async (filter, detailed) => {
  */
 const findSatellite = async (filter, detailed) => {
   try {
-    const selectedFields = getSelectedFieldsInResponse(detailed); 
+    const selectedFields = getSelectedFieldsInResponse(detailed, ALL_FIELDS, SATELLITE_SUMMARISED_FIELDS); 
     return await Satellite.findOne(filter).select(selectedFields);  
   } catch (error) {
     console.error(error);
@@ -696,7 +682,7 @@ const findSatellite = async (filter, detailed) => {
  */
 const findSatellites = async (filter, detailed) => {
   try {
-    const selectedFields = getSelectedFieldsInResponse(detailed);
+    const selectedFields = getSelectedFieldsInResponse(detailed, ALL_FIELDS, SATELLITE_SUMMARISED_FIELDS);
     return await Satellite.find(filter).select(selectedFields);
   } catch (error) {
     console.error(error);

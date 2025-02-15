@@ -1,7 +1,9 @@
 const ValidationError = require("../utils/ValidationError");
+const { getSelectedFieldsInResponse } = require('../utils/utils');
 const { Beam } = require('../models/beam');
 const { 
   ALL_FIELDS,
+  BEAM_SUMMARISED_FIELDS,
   BEAM_DELETION_ORIGINS 
 } = require('../utils/constants');
 
@@ -53,7 +55,6 @@ const {
  *                     description: Error details
  *               example: "An error has occurred while saving the beam in the database."
  */
-
 exports.createBeam = async (req, res) => {
     try {
   
@@ -92,12 +93,60 @@ exports.createBeam = async (req, res) => {
 
 
 
+// Get beam by ID (with/without details)
+/**
+ * @swagger
+ * /api/beams/id/{id}:
+ *   get:
+ *     summary: Get beam by ID
+ *     tags: [Beams]
+ *     description: | 
+ *       Returns the information corresponding to the requested beam.
+ *       - If **detailed=true**, all fields are returned (see **Beams** schema)
+ *       - If **detailed is omitted or false**, a summarized version is returned.
+ *     parameters: 
+ *     - in: query
+ *       name: detailed
+ *       schema:
+ *         type: string
+ *         enum: ["true", "false"]
+ *       required: false
+ *       description: "Use 'true' to get full beam details. Default is summary mode."
+ *     - in: path
+ *       name: id
+ *       required: true
+ *       schema:
+ *         type: string
+ *       description: "Beam ID to retrieve"
+ *     responses:
+ *       200:
+ *         description: Beam information
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 oneOf:
+ *                   - $ref: '#/components/schemas/Beam'
+ *                   - Main fields of the Beam   
+ *       404:
+ *         description: Beam not found            
+ *       500:
+ *         description: Internal server error 
+ */ 
+exports.getBeamById = async (req, res) => {
+    const filter = { _id: req.params.id };
+    const { detailed } = req.query;
+  
+    const result = await getBeamByFilter(filter, detailed);
+    return res.status(result.status).json(result.data);
+  };
+
+
+
 /**************************************************************
 * Auxiliary reusable methods for different purposes:
 **************************************************************/
-
-
-
 
 
 
@@ -137,4 +186,66 @@ const validateBeamInformation = (data) => {
     // Mongoose already verifies that the 'linkDirection' in case of provided is within the expected constraints.
     
     return true;
+}
+
+// Retrieves beam data based on a given filter
+/**
+ * Retrieves satellite data based on a given filter.
+ * 
+ * @async
+ * @function getBeamByFilter
+ * @param {Object} filter - The filter criteria for retrieving the beam.
+ * @param {Object} detailed - Additional query parameters to modify the response.
+ * @returns {Promise<{status: number, data: Object}>} 
+ *   A promise resolving to an object with:
+ *   - `status` (number): HTTP-like status code (200, 404, or 500).
+ *   - `data` (Object): Beam data or an error message.
+ * 
+ * @example
+ * const filter = { name: "Beam A" };
+ * const detailed = { details: true };
+ * const result = await getBeamByFilter(filter, detailed);
+ * console.log(result.status, result.data);
+ */
+const getBeamByFilter = async (filter, detailed) => {
+    try {
+      const beam = await findBeam(filter, detailed);
+      if (!beam) {
+        // Returns an structure translatable then as the 'res'.  
+        return {status: 404, data: {message: "Beam not found" }};
+      }
+  
+      return {status: 200, data: beam};
+    } catch(error){
+      console.error(error);
+      return {status: 500, data: {message: `An error occurred. Details: ${error.message}` }};
+    }   
   }
+
+
+
+
+
+/**************************************************************
+* Auxiliary reusable methods to manage database operations:
+**************************************************************/
+
+// Finds a beam in database based on the provided filter and returns the document
+/**
+ * Finds a beam in database based on the provided filter and returns the document.
+ *
+ * @async
+ * @param {Object} filter - Query filter to find the beam in the database.
+ * @param {Object} detailed - Boolean flag to determine the fields to retrieve.
+ * @returns {Promise<Object|null>} Returns the beam object if found, otherwise null.
+ */
+const findBeam = async (filter, detailed) => {
+    try {
+      const selectedFields = getSelectedFieldsInResponse(detailed, ALL_FIELDS, BEAM_SUMMARISED_FIELDS); 
+      return await Beam.findOne(filter).select(selectedFields);  
+    } catch (error) {
+      console.error(error);
+      throw new Error(`An error has occurred while requesting the beam from database. Details: ${error.message}`);
+    }
+  };
+  
