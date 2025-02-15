@@ -136,7 +136,7 @@ const SatelliteSchema = new mongoose.Schema({
 // Summarized satellite schema
 // FIXME: investigate whether not including the 'deleted' could lead to a problem when explicitly requesting deleted elemenets
 const SatelliteSummarisedSchema = new mongoose.Schema({
-  _id: mongoose.Schema.Types.ObjectId,
+  //_id: mongoose.Schema.Types.ObjectId,
   name: NameSchema,
   slug: SlugSchema,
   orbit: OrbitSchema

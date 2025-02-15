@@ -64,7 +64,7 @@ const {
 const BeamSchema = new mongoose.Schema({
   name:  {type: String, required: true},
   linkDirection: {type: String, enum: BEAM_LINK_DIRECTIONS, required: true},
-  pattern: {type: String, default: null}, // FIXME: related to 'pattern' model to be created -> it must manage the thumbnail inside (optionally)
+  pattern: {type: String, default: null}, // FIXME: related to 'pattern' model to be created -> it must manage the thumbnail inside (optionally) -> adap endpoints/validation
   creationOrigin: {type: String, enum: BEAM_CREATION_ORIGINS, default: BEAM_CREATION_ORIGINS[0] },
   createdBy: { type: String }, // FIXME: related to 'users' model
   updatedBy: { type: String }, // FIXME: related to 'users' model
