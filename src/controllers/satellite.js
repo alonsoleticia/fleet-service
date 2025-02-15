@@ -1,11 +1,12 @@
 const ValidationError = require("../utils/ValidationError");
-const { Satellite, SatelliteSummarised } = require('../models/satellite');
-const SUMMARISED_FIELDS = Object.keys(SatelliteSummarised.schema.paths).join(' ');
+const { Satellite } = require('../models/satellite');
+
 const { 
   ALL_FIELDS,
+  SATELLITE_SUMMARISED_FIELDS,
   SATELLITE_STATUSES,
   SATELLITE_DELETION_ORIGINS 
-} = require('../utils/enums');
+} = require('../utils/constants');
 
 /**************************************************************
  * CRUD satellite operations endpoints:
@@ -579,7 +580,7 @@ exports.getSatelliteIdByName = async (req, res) => {
  */
 const getSelectedFieldsInResponse = (detailed) => {
   const showFullDetails = String(detailed) === "true";
-  return showFullDetails ? ALL_FIELDS : SUMMARISED_FIELDS;
+  return showFullDetails ? ALL_FIELDS : SATELLITE_SUMMARISED_FIELDS;
 }
 
 // Validates the satellite information before continuing the processing

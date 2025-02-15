@@ -4,8 +4,7 @@ const {
   BEAM_LINK_DIRECTIONS,
   BEAM_CREATION_ORIGINS, 
   BEAM_DELETION_ORIGINS 
-} = require('../utils/enums');
-
+} = require('../utils/constants');
 
 /**
  * @swagger
@@ -31,16 +30,16 @@ const {
  *           example: uplink
  *         pattern:
  *           type: string
- *           description: Pattern associated with the beam. Related to the 'pattern' model (to be created).
+ *           description: Pattern associated with the beam. 
  *           default: null
+ *         createdBy:
+ *           type: string
+ *           description: User who created the beam in the database.
  *         creationOrigin:
  *           type: string
  *           enum: ["inventory", "manual"]
  *           description: Origin of the creation of the entity.
  *           default: "inventory"
- *         createdBy:
- *           type: string
- *           description: User who created the beam in the database.
  *         updatedBy:
  *           type: string
  *           description: User who last modified the beam in the database.
@@ -62,27 +61,24 @@ const {
 
 // Full beam schema
 const BeamSchema = new mongoose.Schema({
-  name:  {type: String, required: true},
-  linkDirection: {type: String, enum: BEAM_LINK_DIRECTIONS, required: true},
-  pattern: {type: String, default: null}, // FIXME: related to 'pattern' model to be created -> it must manage the thumbnail inside (optionally) -> adap endpoints/validation
-  creationOrigin: {type: String, enum: BEAM_CREATION_ORIGINS, default: BEAM_CREATION_ORIGINS[0] },
+  name:  { type: String, required: true },
+  linkDirection: { type: String, enum: BEAM_LINK_DIRECTIONS, required: true },
+  pattern: { type: String, default: null }, // FIXME: related to 'pattern' model to be created -> it must manage the thumbnail inside (optionally) -> adap endpoints/validation
   createdBy: { type: String }, // FIXME: related to 'users' model
+  creationOrigin: { type: String, enum: BEAM_CREATION_ORIGINS, default: BEAM_CREATION_ORIGINS[0] },
   updatedBy: { type: String }, // FIXME: related to 'users' model
   deleted: { type: Boolean, default: false },
   deletedAt: { type: Date, default: null },
-  deletionOrigin: {type: String, enum: BEAM_DELETION_ORIGINS, default: null },
+  deletionOrigin: { type: String, enum: BEAM_DELETION_ORIGINS, default: null }
 }, {
   timestamps: true // Automatically adds 'createdAt' and 'updatedAt' fields
 });
 
-// Summarized beam schema: TBC. If created, adapt: middleware, schema and export; similarly to what already done for Satellite.
-
 // Middlewares to ignore by default the 'marked as deleted' elements:
 BeamSchema.pre(/^find/, function(next) {
-  this.find({ deleted: false }); 
+  this.find({ deleted: false });
   next();
 });
-
 
 const Beam = mongoose.models.Beam || mongoose.model("Beam", BeamSchema);
 
@@ -91,4 +87,3 @@ module.exports = {
   Beam,
   BeamSchema
 };
-

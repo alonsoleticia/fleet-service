@@ -3,7 +3,7 @@ const { Beam } = require('../models/beam');
 const { 
   ALL_FIELDS,
   BEAM_DELETION_ORIGINS 
-} = require('../utils/enums');
+} = require('../utils/constants');
 
 /**************************************************************
  * CRUD beam operations endpoints:
