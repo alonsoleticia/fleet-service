@@ -1,11 +1,7 @@
 const ValidationError = require("../utils/ValidationError");
 const { getSelectedFieldsInResponse } = require('../utils/utils');
 const { Beam } = require('../models/beam');
-const { 
-  ALL_FIELDS,
-  BEAM_SUMMARISED_FIELDS,
-  BEAM_DELETION_ORIGINS 
-} = require('../utils/constants');
+const { ALL_FIELDS, BEAM } = require('../utils/constants');
 
 /**************************************************************
  * CRUD beam operations endpoints:
@@ -254,7 +250,7 @@ exports.deleteBeam = async (req, res) => {
       const { filter } = req.params.id;
       const updatedBeamInputData ={ 
         deleted: true,  
-        deletionOrigin: BEAM_DELETION_ORIGINS[0], // For the moment, a single origin is supported
+        deletionOrigin: BEAM.DELETION_ORIGINS[0], // For the moment, a single origin is supported
         deletedAt: new Date()
       };
   
@@ -363,7 +359,7 @@ const getBeamByFilter = async (filter, detailed) => {
  */
 const findBeam = async (filter, detailed) => {
     try {
-      const selectedFields = getSelectedFieldsInResponse(detailed, ALL_FIELDS, BEAM_SUMMARISED_FIELDS); 
+      const selectedFields = getSelectedFieldsInResponse(detailed, ALL_FIELDS, BEAM.SUMMARISED_FIELDS); 
       return await Beam.findOne(filter).select(selectedFields);  
     } catch (error) {
       console.error(error);

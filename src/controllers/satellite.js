@@ -2,12 +2,7 @@ const ValidationError = require("../utils/ValidationError");
 const { getSelectedFieldsInResponse } = require('../utils/utils');
 const { Satellite } = require('../models/satellite');
 
-const { 
-  ALL_FIELDS,
-  SATELLITE_SUMMARISED_FIELDS,
-  SATELLITE_STATUSES,
-  SATELLITE_DELETION_ORIGINS 
-} = require('../utils/constants');
+const { ALL_FIELDS, SATELLITE } = require('../utils/constants');
 
 /**************************************************************
  * CRUD satellite operations endpoints:
@@ -72,11 +67,13 @@ exports.createSatellite = async (req, res) => {
   try {
 
     // Extracting required data
-    const { name, slug, status = SATELLITE_STATUSES[0], company = null, createdBy, updatedBy, orbit } = req.body;
+    const { name, slug, status = SATELLITE.STATUSES[0], company = null, createdBy, updatedBy, orbit } = req.body;
 
+    /*
     // Validate input data
     validateSatelliteInformation(req.body);
-
+    */
+   
     // Check if another element with the same 'name' or 'slug' already exists in the database:
     const filter = { $or: [{ name }, { slug }] };
     const detailed = false;
@@ -467,7 +464,7 @@ exports.deleteSatellite = async (req, res) => {
     const { filter } = req.params.id;
     const updatedSatelliteInputData ={ 
       deleted: true,  
-      deletionOrigin: SATELLITE_DELETION_ORIGINS[0], // For the moment, a single origin is supported
+      deletionOrigin: SATELLITE.DELETION_ORIGINS[0], // For the moment, a single origin is supported
       deletedAt: new Date()
     };
 
@@ -663,7 +660,7 @@ const getSatelliteByFilter = async (filter, detailed) => {
  */
 const findSatellite = async (filter, detailed) => {
   try {
-    const selectedFields = getSelectedFieldsInResponse(detailed, ALL_FIELDS, SATELLITE_SUMMARISED_FIELDS); 
+    const selectedFields = getSelectedFieldsInResponse(detailed, ALL_FIELDS, SATELLITE.SUMMARISED_FIELDS); 
     return await Satellite.findOne(filter).select(selectedFields);  
   } catch (error) {
     console.error(error);
@@ -682,7 +679,7 @@ const findSatellite = async (filter, detailed) => {
  */
 const findSatellites = async (filter, detailed) => {
   try {
-    const selectedFields = getSelectedFieldsInResponse(detailed, ALL_FIELDS, SATELLITE_SUMMARISED_FIELDS);
+    const selectedFields = getSelectedFieldsInResponse(detailed, ALL_FIELDS, SATELLITE.SUMMARISED_FIELDS);
     return await Satellite.find(filter).select(selectedFields);
   } catch (error) {
     console.error(error);
@@ -722,10 +719,12 @@ const updateSatelliteByFilter = async (filter, detailed, updatedSatelliteInputDa
     const oldSatelliteInfo = getSatelliteResponse.data;
     const oldSatelliteData = oldSatelliteInfo ? oldSatelliteInfo.toObject() : null;     // Use toObject() to convert the Mongoose doc to a normal Object
 
+   /*
     // Validate feasibility of the updated information for the satellite:
     // Any error will be captured in the catch with a ValidationError personalized exception:
     validateSatelliteInformation(updatedSatelliteInputData);
-   
+   */
+
     if (updatedSatelliteInputData._id !== undefined && updatedSatelliteInputData._id !== oldSatelliteData._id){
       return {status: 409, data:  { message: 'Satellite internal ID cannot be modified. It is immutable.' }};
     }

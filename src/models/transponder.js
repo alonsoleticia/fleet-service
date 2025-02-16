@@ -1,11 +1,6 @@
 const mongoose = require('mongoose');
-
-const { 
-  TRANSPONDER_STATUSES,
-  TRANSPONDER_CREATION_ORIGINS, 
-  TRANSPONDER_DELETION_ORIGINS,
-  POLARIZATIONS 
-} = require('../utils/constants');
+const Validator = require('../utils/validation');
+const { TRANSPONDER, POLARIZATIONS } = require('../utils/constants');
 
 /**
  * @swagger
@@ -89,54 +84,102 @@ const {
 
 // Full transponder schema
 const TransponderSchema = new mongoose.Schema({
-  name:  { type: String, required: true },
-  status: { type: String, enum: TRANSPONDER_STATUSES, default: TRANSPONDER_STATUSES[0] },
-  UL_polarization: { type: String, enum: POLARIZATIONS, required: true },
-  DL_polarization: { type: String, enum: POLARIZATIONS, required: true },
+  name: { 
+    type: String, 
+    required: [true, "Transponder 'name' is mandatory"],  
+    validate: [
+      {
+        validator: Validator.isStringFormatValid,  
+        message: "Name can only contain letters, numbers, hyphens, and spaces."
+      },
+      {
+        validator: function(value) {
+          return Validator.isMinLengthTrimmed(value, BEAM.NAME_MIN_LENGTH);  
+        },
+        message: `The name must have at least ${TRANSPONDER.NAME_MIN_LENGTH} characters after trimming.`
+      }
+    ]
+  },
+  status: { 
+    type: String, 
+    enum: TRANSPONDER.STATUSES, 
+    default: TRANSPONDER.STATUSES[0]  
+  },
+  UL_polarization: { 
+    type: String, 
+    enum: POLARIZATIONS, 
+    required: true 
+  },
+  DL_polarization: { 
+    type: String, 
+    enum: POLARIZATIONS, 
+    required: true 
+  },
   UL_frequency: { 
     type: Number, 
     required: true,
     validate: {
-      validator: function (value) {
-        return value > 0; 
+      validator: function(value) {
+        return Validator.isGreaterThan(value, TRANSPONDER.MIN_FREQUENCY);                         
       },
-      message: props => `${props.value} is not a valid frequency. It must be greater than 0.`
+      message: `Uplink frequency must be greater than ${TRANSPONDER.MIN_FREQUENCY}.`
     }
-  }, // MHz ?
+  },
   DL_frequency: { 
     type: Number, 
     required: true,
     validate: {
-      validator: function (value) {
-        return value > 0; 
+      validator: function(value) {
+        return Validator.isGreaterThan(value, TRANSPONDER.MIN_FREQUENCY);                         
       },
-      message: props => `${props.value} is not a valid frequency. It must be greater than 0.`
+      message: `Downlink frequency must be greater than ${TRANSPONDER.MIN_FREQUENCY}.`
     }
-  }, // MHz ?
+  },
   bandwidth: { 
     type: Number, 
     required: true,
     validate: {
-      validator: function (value) {
-        return value > 0; 
+      validator: function(value) {
+        return Validator.isGreaterThan(value, TRANSPONDER.MIN_BANDWIDTH);                         
       },
-      message: props => `${props.value} is not a valid value. It must be greater than 0.`
+      message: `Bandwidth must be greater than ${TRANSPONDER.MIN_BANDWIDTH}.`
     }
-  }, // MHz ?
-  company: { type: String, default: null }, // FIXME: related to 'companies' model (or null)
-  createdBy: { type: String }, // FIXME: related to 'users' model
-  creationOrigin: { type: String, enum: TRANSPONDER_CREATION_ORIGINS, default: TRANSPONDER_CREATION_ORIGINS[0] },
-  updatedBy: { type: String }, // FIXME: related to 'users' model
-  deleted: { type: Boolean, default: false },
-  deletedAt: { type: Date, default: null },
-  deletionOrigin: { type: String, enum: TRANSPONDER_DELETION_ORIGINS, default: null }
+  },
+  company: { 
+    type: String, 
+    default: null  
+  },
+  createdBy: { 
+    type: String  
+  },
+  creationOrigin: { 
+    type: String, 
+    enum: TRANSPONDER.CREATION_ORIGINS, 
+    default: TRANSPONDER.CREATION_ORIGINS[0]  
+  },
+  updatedBy: { 
+    type: String  
+  },
+  deleted: { 
+    type: Boolean, 
+    default: false  
+  },
+  deletedAt: { 
+    type: Date, 
+    default: null  
+  },
+  deletionOrigin: { 
+    type: String, 
+    enum: TRANSPONDER.DELETION_ORIGINS, 
+    default: null  
+  }
 }, {
   timestamps: true // Automatically adds 'createdAt' and 'updatedAt' fields
 });
 
 // Middlewares to ignore by default the 'marked as deleted' elements:
 TransponderSchema.pre(/^find/, function(next) {
-  this.find({ deleted: false });
+  this.find({ deleted: false });  
   next();
 });
 

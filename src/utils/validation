@@ -1,0 +1,52 @@
+/**************************************************************
+* Utility literal Object for validation methods:
+**************************************************************/
+const Validator = {
+    /**
+     * Validator to check if a string contains only allowed characters: letters, numbers, hyphens, and spaces.
+     * 
+     * @param {string} value - The string to validate.
+     * @returns {boolean} True if the string contains only allowed characters, otherwise false.
+     */
+    isStringFormatValid: (value) => {
+      const regex = /^[a-zA-Z0-9- ]+$/;
+      return regex.test(value); 
+    },
+  
+    /**
+     * Validator to check if a string has at least the specified number of characters after trimming leading and trailing spaces.
+     * 
+     * @param {string} value - The string to validate.
+     * @param {number} minLength - The minimum required length of the string.
+     * @returns {boolean} True if the string's length is greater than or equal to the specified length after trimming, otherwise false.
+     */
+    isMinLengthTrimmed: (value, minLength) => {
+      const trimmedValue = value.trim(); 
+      return trimmedValue.length >= minLength; 
+    },
+
+    /**
+     * Validator to check if a number is within a specific range.
+     * 
+     * @param {number} value - The number to validate.
+     * @param {number} min - The minimum allowed value.
+     * @param {number} max - The maximum allowed value.
+     * @returns {boolean} True if the value is within the range, otherwise false.
+     */
+    isWithinRange: (value, min, max) => {
+      return value >= min && value <= max; 
+    },
+  
+    /**
+     * Validator to ensure a number is greater than a given minimum.
+     * 
+     * @param {number} value - The number to validate.
+     * @param {number} min - The minimum allowed value (exclusive).
+     * @returns {boolean} True if the value is greater than the minimum, otherwise false.
+     */
+    isGreaterThan: (value, min) => {
+      return value > min; 
+    },
+};
+
+module.exports = Validator;

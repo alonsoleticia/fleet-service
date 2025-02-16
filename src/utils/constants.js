@@ -1,39 +1,45 @@
-const ALL_FIELDS = ''
+const constants = {
+  ALL_FIELDS: '',
+  
+  SATELLITE: {
+    NAME_MIN_LENGTH: 3,
+    SLUG_MIN_LENGTH: 3,
+    SUMMARISED_FIELDS: "name slug orbit",
+    STATUSES: ['active', 'inactive'],
+    CREATION_ORIGINS: ['inventory', 'manual'],
+    DELETION_ORIGINS: ['manual'],
+    LONGITUDE_RANGE: [-180, 180],
+    LATITUDE_RANGE: [-90, 90],
+    DEFAULT_HEIGHT: 35786.063, // Km
+    MIN_HEIGHT: 0, //Km
+    DEFAULT_INCLINATION: 0,
+  },
 
-const SATELLITE_SUMMARISED_FIELDS = "name slug orbit"
-const SATELLITE_STATUSES = ['active', 'inactive'];
-const SATELLITE_CREATION_ORIGINS = ['inventory', 'manual'];
-const SATELLITE_DELETION_ORIGINS = ['manual'];
+  BEAM: {
+    NAME_MIN_LENGTH: 3,
+    SUMMARISED_FIELDS: "name linkDirection",
+    LINK_DIRECTIONS: ['uplink', 'downlink'],
+    CREATION_ORIGINS: ['inventory', 'manual'],
+    DELETION_ORIGINS: ['manual'],
+  },
 
-const BEAM_SUMMARISED_FIELDS = "name linkDirection"
-const BEAM_LINK_DIRECTIONS = ['uplink', 'downlink'];
-const BEAM_CREATION_ORIGINS = ['inventory', 'manual'];
-const BEAM_DELETION_ORIGINS = ['manual'];
+  TRANSPONDER: {
+    NAME_MIN_LENGTH: 2,
+    SUMMARISED_FIELDS: "name",
+    STATUSES: ['active', 'inactive'],
+    CREATION_ORIGINS: ['inventory', 'manual'],
+    DELETION_ORIGINS: ['manual'],
+    MIN_FREQUENCY: 0, // General validation
+    MIN_BANDWIDTH: 0, // General validation
+  },
 
-const TRANSPONDER_SUMMARISED_FIELDS = "name"
-const TRANSPONDER_STATUSES = ['active', 'inactive'];
-const TRANSPONDER_CREATION_ORIGINS = ['inventory', 'manual'];
-const TRANSPONDER_DELETION_ORIGINS = ['manual'];
+  POLARIZATIONS: ['V', 'H', 'LHCP', 'RHCP'],
+  POLARIZATIONS_VERBOSE: [
+    'linear vertical polarization', 
+    'linear horizontal polarization', 
+    'left-handed circular polarization', 
+    'right-handed circular polarization'
+  ]
+};
 
-const POLARIZATIONS = ['V', 'H', 'LHCP', 'RHCP'];
-const POLARIZATIONS_VERBOSE = ['linear vertical polarization', 'linear horizontal polarization', 'left-handed circular polarization', 'right-handed circular polarization'];
-
-
-
-module.exports = {
-    ALL_FIELDS,
-    SATELLITE_SUMMARISED_FIELDS,
-    SATELLITE_STATUSES,
-    SATELLITE_CREATION_ORIGINS,
-    SATELLITE_DELETION_ORIGINS,
-    BEAM_SUMMARISED_FIELDS,
-    BEAM_LINK_DIRECTIONS,
-    BEAM_CREATION_ORIGINS,
-    BEAM_DELETION_ORIGINS,
-    TRANSPONDER_SUMMARISED_FIELDS,
-    TRANSPONDER_STATUSES,
-    TRANSPONDER_CREATION_ORIGINS,
-    TRANSPONDER_DELETION_ORIGINS,
-    POLARIZATIONS,
-    POLARIZATIONS_VERBOSE
-  };
+module.exports = constants;
