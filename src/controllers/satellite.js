@@ -29,28 +29,6 @@ const { ALL_FIELDS, SATELLITE } = require('../utils/constants');
  *             application/json:
  *               schema:
  *                 $ref: '#/components/schemas/Satellite'
- *         400:
- *           description: Bad request
- *           content:
- *             application/json:
- *               schema:
- *                 type: object
- *                 properties:
- *                   error:
- *                     type: string
- *                     description: Error details
- *               example: "The fields 'name', 'slug' and 'orbit' are required."
- *         409:
- *           description: Conflict
- *           content:
- *             application/json:
- *               schema:
- *                 type: object
- *                 properties:
- *                   error:
- *                     type: string
- *                     description: Error details
- *               example: "The provided satellite 'name' already exists in database."
  *         500:
  *           description: Internal server error
  *           content:
@@ -68,11 +46,6 @@ exports.createSatellite = async (req, res) => {
 
     // Extracting required data
     const { name, slug, status = SATELLITE.STATUSES[0], company = null, createdBy, updatedBy, orbit } = req.body;
-
-    /*
-    // Validate input data
-    validateSatelliteInformation(req.body);
-    */
    
     // Check if another element with the same 'name' or 'slug' already exists in the database:
     const filter = { $or: [{ name }, { slug }] };
@@ -101,11 +74,7 @@ exports.createSatellite = async (req, res) => {
     return res.status(201).json(savedSatellite);
 
   } catch (error) {
-      if (error instanceof ValidationError){
-        return res.status(400).json({ error: `The introduced values for the satellite are not correct. Details: ${error.message}` });
-      }else{
-        return res.status(500).json({ error: `An error has occurred while saving the satellite in database. Details: ${error}` });
-      }
+    return res.status(500).json({ error: `An error has occurred while saving the satellite in database. Details: ${error}` });
   }
 };
 
@@ -366,18 +335,6 @@ exports.updateSatelliteById = async (req, res) => {
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Satellite'
- *       400:
- *         description: Validation error in the provided data
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   description: Error details
- *               example:
- *                 error: "The fields 'name', 'slug' and 'orbit' are required."
  *       404:
  *         description: Satellite not found
  *         content:
@@ -566,51 +523,6 @@ exports.getSatelliteIdByName = async (req, res) => {
  * Auxiliary reusable methods for different purposes:
  **************************************************************/
 
-// Validates the satellite information before continuing the processing
-/**
- * Validates the satellite information before continuing the processing
- *
- * @param {Object} data - The satellite data to validate.
- * @param {string} data.name - The unique name of the satellite.
- * @param {string} data.slug - The unique slug (extended name) of the satellite.
- * @param {string} [data.status] - The status of the satellite (e.g., "active", "inactive").
- * @param {string} [data.company] - The company operating the satellite (optional).
- * @param {string} [data.createdBy] - The user who created the satellite (optional).
- * @param {string} [data.updatedBy] - The user who last updated the satellite (optional).
- * @param {Object} data.orbit - The orbit information of the satellite.
- * @param {number} data.orbit.longitude - The orbit longitude (positive East, negative West).
- * @param {number} data.orbit.latitude - The orbit latitude (positive North, negative South).
- * @param {number} data.orbit.inclination - The orbit inclination angle.
- * @param {number} data.orbit.height - The orbit height in kilometers.
- * 
- * @throws {ValidationError} If any required field is missing or has an incorrect type.
- * @throws {ValidationError} If orbital information is out of the valid range.
- * 
- * @returns {boolean} Returns `true` if validation is successful.
- */
-const validateSatelliteInformation = (data) => {
-  
-  const { name, slug, status, company, createdBy, updatedBy, orbit } = data;
-  // Required fields validation:
-  if (!name || !slug || !orbit) {
-    throw new ValidationError("The fields 'name', 'slug' and 'orbit' are required.")
-  }
-
-  // Verify the types of the fields:
-  if (typeof name !== "string" || typeof slug !== "string" || typeof orbit !== "object" || orbit === null){
-    throw new ValidationError("The fields 'name', 'slug' or 'orbit' do not present the correct type.")
-  }
-
-  // Mongoose already verifies that the 'status' in case of provided is within the expected constraints.
-  
-  // Verify the consistency of the orbit information:
-  if (orbit.latitude < -90 || orbit.latitude > 90 || orbit.longitude < -180 || orbit.longitude > 180 || orbit.height <= 0){
-    throw new ValidationError("Orbital information out of range.")
-  }
-  // TODO: verify consistency of 'company' field.
-  return true;
-}
-
 // Retrieves satellite data based on a given filter
 /**
  * Retrieves satellite data based on a given filter.
@@ -719,19 +631,13 @@ const updateSatelliteByFilter = async (filter, detailed, updatedSatelliteInputDa
     const oldSatelliteInfo = getSatelliteResponse.data;
     const oldSatelliteData = oldSatelliteInfo ? oldSatelliteInfo.toObject() : null;     // Use toObject() to convert the Mongoose doc to a normal Object
 
-   /*
-    // Validate feasibility of the updated information for the satellite:
-    // Any error will be captured in the catch with a ValidationError personalized exception:
-    validateSatelliteInformation(updatedSatelliteInputData);
-   */
-
     if (updatedSatelliteInputData._id !== undefined && updatedSatelliteInputData._id !== oldSatelliteData._id){
       return {status: 409, data:  { message: 'Satellite internal ID cannot be modified. It is immutable.' }};
     }
 
     if (updatedSatelliteInputData.name !== oldSatelliteData.name || updatedSatelliteInputData.slug !== oldSatelliteData.slug) {
       return {status: 409, data:  { message: 'Satellite name or slug cannot be modified. They are immutable.' }};
-    }
+    } 
 
     const satellite = await findAndUpdateSatellite(filter, updatedSatelliteInputData);
 
