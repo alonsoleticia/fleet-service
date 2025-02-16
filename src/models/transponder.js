@@ -31,14 +31,14 @@ const { TRANSPONDER, POLARIZATIONS } = require('../utils/constants');
  *           example: active
  *         UL_polarization:
  *           type: string
- *           enum: ["horizontal", "vertical", "circular"]
+ *           enum: ["V", "H", "LHCP", "RHCP"]
  *           description: Uplink polarization type.
- *           example: horizontal
+ *           example: V
  *         DL_polarization:
  *           type: string
- *           enum: ["horizontal", "vertical", "circular"]
+ *           enum: ["V", "H", "LHCP", "RHCP"]
  *           description: Downlink polarization type.
- *           example: vertical
+ *           example: H
  *         UL_frequency:
  *           type: number
  *           description: Uplink frequency in MHz. Must be greater than 0.
@@ -94,7 +94,7 @@ const TransponderSchema = new mongoose.Schema({
       },
       {
         validator: function(value) {
-          return Validator.isMinLengthTrimmed(value, BEAM.NAME_MIN_LENGTH);  
+          return Validator.isMinLengthTrimmed(value, TRANSPONDER.NAME_MIN_LENGTH);  
         },
         message: `The name must have at least ${TRANSPONDER.NAME_MIN_LENGTH} characters after trimming.`
       }

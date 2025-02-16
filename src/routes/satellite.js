@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const satelliteController = require('../controllers/satellite');
-// console.log(satelliteController);  // Shows the object with the exported functions.
 
 // Routes to handle satellites
 router.post('/', satelliteController.createSatellite);  // Create a new satellite
@@ -13,4 +12,4 @@ router.put('/id/:id', satelliteController.updateSatelliteById);  // Update a sat
 router.put('/name/:name', satelliteController.updateSatelliteByName);  // Update a satellite by name
 router.delete('/id/:id', satelliteController.deleteSatellite);  // Delete a satellite by ID
 
-module.exports = router;  // Export the router to be used in other parts of the application
+module.exports = router;  

@@ -1,4 +1,3 @@
-const ValidationError = require("../utils/ValidationError");
 const { getSelectedFieldsInResponse } = require('../utils/utils');
 const { Beam } = require('../models/beam');
 const { ALL_FIELDS, BEAM } = require('../utils/constants');
@@ -7,7 +6,6 @@ const { ALL_FIELDS, BEAM } = require('../utils/constants');
  * CRUD beam operations endpoints:
  **************************************************************/
 
-// Create a new beam
 /**
  * @swagger
  *   /api/beams:
@@ -42,20 +40,11 @@ const { ALL_FIELDS, BEAM } = require('../utils/constants');
  */
 exports.createBeam = async (req, res) => {
     try {
-  
-      // Extracting required data
-      const { name, linkDirection, pattern = null, createdBy, updatedBy } = req.body;
-  
+   
       // No need of checking if another element with the same 'name' already exists in the database, since the filed is not unique.
   
       // Create the beam: 
-      const beam = new Beam({
-        name,
-        linkDirection,
-        pattern,
-        createdBy,
-        updatedBy
-      });
+      const beam = new Beam({...req.body});
   
       // Save the new element in database activating the Mongoose validators
       const savedBeam = await beam.save({ runValidators: true });
@@ -64,15 +53,10 @@ exports.createBeam = async (req, res) => {
       return res.status(201).json(savedBeam);
   
     } catch (error) {
-        if (error instanceof ValidationError){
-          return res.status(400).json({ error: `The introduced values for the beam are not correct. Details: ${error.message}` });
-        }else{
-          return res.status(500).json({ error: `An error has occurred while saving the beam in database. Details: ${error}` });
-        }
+      return res.status(500).json({ error: `An error has occurred while saving the beam in database. Details: ${error}` });
     }
   };
 
-// Get beam by ID (with/without details)
 /**
  * @swagger
  * /api/beams/id/{id}:
@@ -121,7 +105,6 @@ exports.getBeamById = async (req, res) => {
     return res.status(result.status).json(result.data);
 };
 
-// Update beam by ID 
 /**
  * @swagger
  * /api/beams/id/{id}:
@@ -196,7 +179,6 @@ exports.updateBeamById = async (req, res) => {
     return res.status(result.status).json(result.data);
 };
 
-// Delete beam by ID (soft delete)
 /**
  * @swagger
  * /api/beams/id/{id}:
@@ -257,7 +239,6 @@ exports.deleteBeam = async (req, res) => {
 * Auxiliary reusable methods for different purposes:
 **************************************************************/
 
-// Retrieves beam data based on a given filter
 /**
  * Retrieves satellite data based on a given filter.
  * 
@@ -291,12 +272,10 @@ const getBeamByFilter = async (filter, detailed) => {
     }   
 }
 
-
 /**************************************************************
 * Auxiliary reusable methods to manage database operations:
 **************************************************************/
 
-// Finds a beam in database based on the provided filter and returns the document
 /**
  * Finds a beam in database based on the provided filter and returns the document.
  *
@@ -315,7 +294,6 @@ const findBeam = async (filter, detailed) => {
     }
 };
   
-// Updates and retrieves a beam's data based on a given filter
 /**
  * Updates and retrieves a beam's data based on a given filter.
  *
@@ -350,7 +328,11 @@ const updateBeamByFilter = async (filter, detailed, updatedBeamInputData) => {
       if (updatedBeamInputData._id !== undefined && updatedBeamInputData._id !== oldBeamData._id){
         return {status: 409, data:  { message: 'Beam internal ID cannot be modified. It is immutable.' }};
       }
-  
+
+      if (updatedBeamInputData.name !== oldBeamData.name) {
+        return {status: 409, data:  { message: 'Beam name cannot be modified. It is immutable.' }};
+      }
+
       if (updatedBeamInputData.linkDirection !== oldBeamData.linkDirection) {
         return {status: 409, data:  { message: 'Beam link direction cannot be modified. It is immutable.' }};
       }
@@ -365,7 +347,6 @@ const updateBeamByFilter = async (filter, detailed, updatedBeamInputData) => {
     }
 }
 
-// Updates a beam in the database based on the provided filter and returns the updated document
 /**
  * Updates a beam in the database based on the provided filter and returns the updated document.
  *

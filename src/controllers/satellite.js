@@ -1,4 +1,3 @@
-const ValidationError = require("../utils/ValidationError");
 const { getSelectedFieldsInResponse } = require('../utils/utils');
 const { Satellite } = require('../models/satellite');
 
@@ -8,7 +7,6 @@ const { ALL_FIELDS, SATELLITE } = require('../utils/constants');
  * CRUD satellite operations endpoints:
  **************************************************************/
 
-// Create a new satellite
 /**
  * @swagger
  *   /api/satellites:
@@ -45,7 +43,7 @@ exports.createSatellite = async (req, res) => {
   try {
 
     // Extracting required data
-    const { name, slug, status = SATELLITE.STATUSES[0], company = null, createdBy, updatedBy, orbit } = req.body;
+    const { name, slug } = req.body;
    
     // Check if another element with the same 'name' or 'slug' already exists in the database:
     const filter = { $or: [{ name }, { slug }] };
@@ -57,15 +55,7 @@ exports.createSatellite = async (req, res) => {
     }
 
     // Create the satellite: 
-    const satellite = new Satellite({
-      name,
-      slug,
-      status,
-      company,
-      createdBy,
-      updatedBy,
-      orbit
-    });
+    const satellite = new Satellite({ ...req.body });
 
     // Save the new element in database activating the Mongoose validators
     const savedSatellite = await satellite.save({ runValidators: true });
@@ -78,7 +68,6 @@ exports.createSatellite = async (req, res) => {
   }
 };
 
-// Get all satellites (with/without details)
 /**
  * @swagger
  * /api/satellites:
@@ -122,7 +111,6 @@ exports.getAllSatellites = async (req, res) => {
   }
 };
 
-// Get satellite by ID (with/without details)
 /**
  * @swagger
  * /api/satellites/id/{id}:
@@ -171,7 +159,6 @@ exports.getSatelliteById = async (req, res) => {
   return res.status(result.status).json(result.data);
 };
 
-// Get satellite by name (with/without details)
 /**
  * @swagger
  * /api/satellites/name/{name}:
@@ -220,7 +207,6 @@ exports.getSatelliteByName = async (req, res) => {
   return res.status(result.status).json(result.data);
 };
 
-// Update satellite by ID 
 /**
  * @swagger
  * /api/satellites/id/{id}:
@@ -307,7 +293,6 @@ exports.updateSatelliteById = async (req, res) => {
     return res.status(result.status).json(result.data);
 };
 
-// Update satellite by name
 /**
  * @swagger
  * /api/satellites/name/{name}:
@@ -382,7 +367,6 @@ exports.updateSatelliteByName = async (req, res) => {
     return res.status(result.status).json(result.data);
 }
 
-// Delete satellite by ID (soft delete)
 /**
  * @swagger
  * /api/satellites/id/{id}:
@@ -442,7 +426,6 @@ exports.deleteSatellite = async (req, res) => {
  * Auxiliary endpoints:
  **************************************************************/
 
-// Get satellite ID by its name
 /** 
  * @swagger
  * /api/satellites/name/{name}/id:
@@ -523,7 +506,6 @@ exports.getSatelliteIdByName = async (req, res) => {
  * Auxiliary reusable methods for different purposes:
  **************************************************************/
 
-// Retrieves satellite data based on a given filter
 /**
  * Retrieves satellite data based on a given filter.
  * 
@@ -561,7 +543,6 @@ const getSatelliteByFilter = async (filter, detailed) => {
  * Auxiliary reusable methods to manage database operations:
  **************************************************************/
 
-// Finds a satellite in database based on the provided filter and returns the document
 /**
  * Finds a satellite in database based on the provided filter and returns the document.
  *
@@ -580,7 +561,6 @@ const findSatellite = async (filter, detailed) => {
   }
 };
 
-// Finds multiple satellites in the database based on the provided filter and returns the documents
 /**
  * Finds multiple satellites in the database based on the provided filter and returns the documents.
  *
@@ -599,7 +579,6 @@ const findSatellites = async (filter, detailed) => {
   }
 };
 
-// Updates and retrieves a satellite's data based on a given filter
 /**
  * Updates and retrieves a satellite's data based on a given filter.
  *
@@ -649,7 +628,6 @@ const updateSatelliteByFilter = async (filter, detailed, updatedSatelliteInputDa
   }
 }
 
-// Updates a satellite in the database based on the provided filter and returns the updated document
 /**
  * Updates a satellite in the database based on the provided filter and returns the updated document.
  *

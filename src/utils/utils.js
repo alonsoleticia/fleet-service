@@ -2,7 +2,6 @@
 * Auxiliary reusable methods to implement APIs:
 **************************************************************/
 
-// Determines which fields should be selected in the response based on the query parameter
 /**
  * Determines which fields should be selected in the response based on the query parameter.
  * 
